@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "@faker-js/faker": "^10.1.0",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/bun": "latest"
+  },
+  "name": "microblog-api",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
