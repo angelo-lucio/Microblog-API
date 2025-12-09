@@ -1,46 +1,56 @@
-import express from 'express'
-import {faker} from '@faker-js/faker'
+import express, { type Request, type Response } from 'express' 
 
 const app = express() 
+const port = 3000 
+ 
+app.get('/hello-world', (req: Request, res: Response) => { 
+  res.send('Hello World!') 
+}) 
+ 
+app.listen(port, () => { 
+  console.log(`Example app listening on port ${port}`) 
+}) 
+
+ let posts = [ 
+  { id: 1, content: 'I feel like I am a post' }, 
+  { id: 2, content: 'Today is a good day' }, 
+  { id: 3, content: 'I have a lot of posts' }, 
+  { id: 4, content: 'My posts are the best' }, 
+] 
+app.get('/posts', (req: Request, res: Response) => { 
+  res.send(posts) 
+}) 
+
 app.use(express.json()) 
-const PORT = 3000
 
-app.get('/hello-world', (req, res) => {
-    res.send('HELLO Microbloggers')
-})
+app.post('/posts', (req: Request, res: Response) => { 
+  const newPost = req.body 
+  newPost.id = posts[posts.length - 1].id + 1 
+  posts.push(newPost) 
+  res.send(newPost) 
+}) 
+ 
+app.put('/posts/:id', (req: Request, res: Response) => { 
+  const id = parseInt(req.params.id)
+  const updatedPost = req.body 
+  const existingPost = posts.find((post) => post.id === id) 
+  if (!existingPost) { 
+    res.status(404).send('Post not found') 
+    return 
+  } 
+  updatedPost.id = id 
+  posts = posts.map((post) => (post.id === id ? updatedPost : post)) 
+  res.send(updatedPost) 
+}) 
 
-app.listen(PORT, () => {
-    console.log('Webserver is running', PORT)
-})
+app.delete('/posts/:id', (req: Request, res: Response) => { 
+  const id = parseInt(req.params.id) 
+  posts = posts.filter((post) => post.id !== id) 
+  res.send(posts) 
+}) 
 
-
-//Definition
-interface Post {
-id : number
-text : string
-}
-
-// Random Posts
-function createRandomPosts (): Post {
-    return {
-        id : faker.number.int({min:100, max:9999}), //IDs
-        text : faker.lorem.sentences(), // text
-    };
-}
-
-const posts : Post [] = faker.helpers.multiple(createRandomPosts,{
-    count: 20
-})
-
-app.get('/posts', (req, res) => {
-    res.send (posts);
-})
-
-app.get('/getpost', (req, res) => {
-    res.send(posts);
-})
-
-
-
+ 
+ 
+ 
  
 
