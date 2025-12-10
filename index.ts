@@ -1,4 +1,4 @@
-import express, { type Request, type Response } from 'express' 
+import express, { text, type Request, type Response } from 'express' 
 
 const app = express() 
 const port = 3000 
@@ -11,42 +11,44 @@ app.listen(port, () => {
   console.log(`Example app listening on port ${port}`) 
 }) 
 
- let posts = [ 
-  { id: 1, content: 'I feel like I am a post' }, 
-  { id: 2, content: 'Today is a good day' }, 
-  { id: 3, content: 'I have a lot of posts' }, 
-  { id: 4, content: 'My posts are the best' }, 
+ let post = [ 
+  { id: 1, text: 'I feel like I am a post' }, 
+  { id: 2, text: 'Today is a good day' }, 
+  { id: 3, text: 'I have a lot of post' }, 
+  { id: 4, text: 'My post are the best' }, 
 ] 
-app.get('/posts', (req: Request, res: Response) => { 
-  res.send(posts) 
+app.get('/post', (req: Request, res: Response) => { 
+  res.send(post) 
 }) 
 
 app.use(express.json()) 
 
-app.post('/posts', (req: Request, res: Response) => { 
-  const newPost = req.body 
-  newPost.id = posts[posts.length - 1].id + 1 
-  posts.push(newPost) 
+app.post('/post', (req: Request, res: Response) => { 
+  const lastPost = post [post.length - 1]
+  const Id = lastPost == undefined ? 1 : lastPost?.id + 1
+  const newPost = {id: Id, text: req.body}
+  post.push(newPost)
   res.send(newPost) 
 }) 
+
  
-app.put('/posts/:id', (req: Request, res: Response) => { 
-  const id = parseInt(req.params.id)
+app.put('/post/:id', (req: Request, res: Response) => { 
+  const id = parseInt(req.params.id ?? "0")
   const updatedPost = req.body 
-  const existingPost = posts.find((post) => post.id === id) 
+  const existingPost = post.find((post) => post.id === id) 
   if (!existingPost) { 
     res.status(404).send('Post not found') 
     return 
   } 
   updatedPost.id = id 
-  posts = posts.map((post) => (post.id === id ? updatedPost : post)) 
+  post = post.map((post) => (post.id === id ? updatedPost : post)) 
   res.send(updatedPost) 
 }) 
 
-app.delete('/posts/:id', (req: Request, res: Response) => { 
-  const id = parseInt(req.params.id) 
-  posts = posts.filter((post) => post.id !== id) 
-  res.send(posts) 
+app.delete('/post/:id', (req: Request, res: Response) => { 
+  const id = parseInt(req.params.id ?? "0") 
+  post = post.filter((post) => post.id !== id) 
+  res.send(post) 
 }) 
 
  
