@@ -8,10 +8,14 @@
     "@types/bun": "latest"
   },
   "name": "microblog-api",
-  "module": "index.ts",
+  "module": "src/app.ts",
   "type": "module",
   "private": true,
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "scripts": {
+    "dev": "bun run src/app.ts",
+    "start": "bun run src/app.ts"
   }
 }
