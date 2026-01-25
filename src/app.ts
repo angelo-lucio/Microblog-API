@@ -1,5 +1,6 @@
 import express, { type Request, type Response } from "express";
 import { initializeAPI } from "./api";
+import { initializeAuthAPI } from "./api/auth";
 
 const app = express();
 const port = 3000;
