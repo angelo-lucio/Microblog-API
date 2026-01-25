@@ -13,11 +13,10 @@ Der **`main`** Branch ist ausschließlich für stabile Backups und fertigen Code
 
 
 
-[Image of Git Flow diagram]
 
 
 ## Docker & Datenbank
-* **Docker Compose:** Ändere keine Ports im `docker-compose.yml` (z.B. 5432), ohne dies vorher mit dem Team abzusprechen.
+* **Docker Compose:** Ändere die Ports im `docker-compose.yml` nur wenn nötig (Aufgaben-Verteilung), teile dies dem Team mit.
 * **Drizzle ORM:** Wenn du das Schema änderst, füge die generierten Migrationen deinem Commit hinzu, damit alle anderen ihre DB synchronisieren können.
 
 ## Commit-Nachrichten

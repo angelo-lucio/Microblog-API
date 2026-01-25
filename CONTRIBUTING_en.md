@@ -14,7 +14,7 @@ The **`main`** branch is strictly for stable backups and production-ready code.
 
 
 ## Docker & Database
-* **Docker Compose:** Do not change shared ports (e.g., 5432) without consulting the team.
+* **Docker Compose:** Change shared ports, only if strictly needed (tasks assignment). In that case ommunicate it the wohle team, please.
 * **Drizzle ORM:** If you change the schema, include the generated migrations in your commit so others can sync their local DBs.
 
 ## Commit Messages
