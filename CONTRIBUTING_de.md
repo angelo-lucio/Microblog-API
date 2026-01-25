@@ -1,4 +1,4 @@
-# 🚀 Coding-Richtlinien - Projekt Microblog
+# Coding-Richtlinien - Projekt Microblog
 
 Um die Stabilität des Codes und eine reibungslose Zusammenarbeit zu gewährleisten, gelten folgende Regeln.
 
