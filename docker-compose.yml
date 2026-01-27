@@ -43,6 +43,15 @@ services:
     depends_on:
       - minitwitter-1
       - minitwitter-2
+  
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollamaforminitwitter
+    restart: always
+    ports:
+      - "11434:11434" # Ollama API port, it doesn't conflict with installed version
+    volumes:
+      - ./docker-data/ollama:/root/.ollama
 
 
 volumes:
