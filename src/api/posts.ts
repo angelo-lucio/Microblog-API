@@ -3,6 +3,7 @@ import { postsTable } from "../db/schema";
 import { db } from "../database";
 import { and, eq } from "drizzle-orm";
 import { sentimentQueue } from "../message-broker/index.ts";
+import { fa } from "@faker-js/faker";
 
 export const initializePostsAPI = (app: Express) => {
     app.get("/hello-world", (req: Request, res: Response) => {
@@ -11,13 +12,22 @@ export const initializePostsAPI = (app: Express) => {
 
     app.get("/posts", async (req: Request, res: Response) => {
         const userId = req.user?.id;
+        //
         if (!userId) {
             res.status(401).send({ error: "Unauthorized" });
-            return;
-        }
-        const posts = await db.select().from(postsTable).where(eq(postsTable.userId, userId));
-        res.send(posts);
-    });
+        // if user is authenticated, fetch posts from database and filter out negative and dangerous posts that are not created by the user
+        } else {
+        // fetch all posts from database
+        const allPosts = await db.select().from(postsTable);
+
+        const  validPosts = allPosts.filter(post => {
+            // if post is negative or dangerous, only show it to the user who created it
+            if (post.sentiment === "negative" || post.sentiment === "dangerous") 
+                return post.userId === userId;
+                return false;
+        });
+        res.send(validPosts);
+    };
 
     app.post("/posts", async (req: Request, res: Response) => {
         const userId = req.user?.id;
@@ -93,4 +103,5 @@ export const initializePostsAPI = (app: Express) => {
         await db.delete(postsTable).where(and(eq(postsTable.id, id), eq(postsTable.userId, uId)));
         res.send({ Feedback: "Post deleted successfully", deletedPost: deletedPost[0] });
     });
-};
+})
+}

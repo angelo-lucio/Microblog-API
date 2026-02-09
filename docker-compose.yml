@@ -38,6 +38,21 @@ services:
           condition: service_started
     restart: always
 
+  sentiment-worker:
+    build: .      
+    container_name: sentiment-worker
+    environment:
+      DATABASE_URL: postgresql://postgres:supersecret123@db:5432/minitwitter
+      REDIS_HOST: redis
+      OLLAMA_HOST: http://ollamaforminitwitter:11434
+      SERVER_ROLE: worker
+    depends_on:
+      redis:        # needed to start Redis before API
+        condition: service_healthy
+      db:            # needed to start DB befor API
+        condition: service_started
+    restart: always
+
   load-balancer:
     image: nginx:latest
     container_name: load-balancer
