@@ -5,7 +5,7 @@ import { textAnalysis } from "../services/ai"
 import { postsTable } from "../db/schema"
 import { db } from "../database"
 
-let sentimentQueue: Queue
+export let sentimentQueue: Queue
 let sentimentWorker: Worker
 
 export const initializeMessageBroker = () => {
@@ -15,9 +15,12 @@ export const initializeMessageBroker = () => {
         maxRetriesPerRequest: null,
     })
     sentimentQueue = new Queue('sentiment', { connection })
-    sentimentWorker = new Worker('sentiment', analyzeSentiment, { connection })
-    console.log("Message broker initialized")
-}   
+    console.log("Sentiment queue initialized")
+    if (process.env.SERVER_ROLE === "all" || process.env.SERVER_ROLE === "worker") {
+        sentimentWorker = new Worker('sentiment', analyzeSentiment, { connection })
+        console.log("Sentiment worker initialized")
+    }
+}
 
 const analyzeSentiment = async (job: Job) => {
     console.log(job.data)
@@ -40,5 +43,3 @@ const analyzeSentiment = async (job: Job) => {
     await db.update(postsTable).set({ sentiment: analysis.sentiment, correction: analysis.correction }).where(eq(postsTable.id, postId))
     console.log(`Sentiment analysis for post ${postId} completed`)
 }
-
-export { sentimentQueue }
