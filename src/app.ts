@@ -1,16 +1,14 @@
-import express, { type Request, type Response } from "express";
+import express from "express";
 import { initializeAPI } from "./api";
-import { initializeAuthAPI } from "./api/auth";
+import cors from 'cors'
 
-const app = express();
 const port = 3000;
-
-
+const app = express();
 app.use(express.json());
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+app.use(cors({ origin: ["http://localhost:5173"], credentials: true }))
 
 initializeAPI(app);
 
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});

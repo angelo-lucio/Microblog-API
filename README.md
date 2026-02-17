@@ -1,31 +1,32 @@
-# microblog-api
+# posts-api
 
-## To install dependencies:
+To install dependencies:
 
 ```bash
 bun install
 ```
 
-## Setting up PostgreSQL
-
-You can quickly run a PostgreSQL container for development using Docker:
-```bash
-docker run --name local-mini-db -p 5432:5432 -e POSTGRES_PASSWORD=supersecret123 -e POSTGRES_DB=minitwitter -d postgres
-```
-
-
-## To run:
+To run:
 
 ```bash
-bun start dev
-npx drizzle-kit push 
+bun run index.ts
 ```
 
-## Kokilan dont forget to update readme for db schema migration
-
-This project was created using `bun init` in bun v1.3.1. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
-
-Arbeitsblatt 6 auch fertig gemacht. 
+This project was created using `bun init` in bun v1.3.8. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
 
 
-## Dario in the House 
+docker compose exec minitwitter bunx drizzle-kit push
+
+$env:DATABASE_URL="postgresql://postgres:supersecret123@localhost:5432/minitwitter"
+bunx drizzle-kit studio
+
+
+powershell -c "irm bun.sh/install.ps1 | iex"
+
+
+
+http://localhost/auth/login
+http://localhost/posts
+
+
+

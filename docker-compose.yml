@@ -1,49 +1,50 @@
 services:
-  db:
-    image: postgres:16
+  postgres:
+    image: postgres
     container_name: my-postgres
     restart: always
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: supersecret123
-      POSTGRES_DB: minitwitter
+      - POSTGRES_PASSWORD=supersecret123
+      - POSTGRES_DB=minitwitter
     volumes:
-      - ./docker-data:/var/lib/postgresql/data
+      - ./docker-data:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   minitwitter-1:
-    build: .          # to build docker image with the Dockerfile in this directory
-    container_name: minitwitter-1
-
-    environment:
-      DATABASE_URL: postgresql://postgres:supersecret123@db:5432/minitwitter
-    depends_on:
-      - db            # needed to start DB befor API
-    restart: always
-
-  minitwitter-2:
-    build: .          # to build docker image with the Dockerfile in this directory
-    container_name: minitwitter-2
-
-    environment:
-      DATABASE_URL: postgresql://postgres:supersecret123@db:5432/minitwitter
-    depends_on:
-      - db            # needed to start DB befor API
-    restart: always
-
-  load-balancer:
-    image: nginx:latest
-    container_name: load-balancer
+    build: .
     restart: always
     ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:supersecret123@postgres:5432/minitwitter
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  minitwitter-2:
+    build: .
+    restart: always
+    ports:
+      - "3002:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:supersecret123@postgres:5432/minitwitter
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  load-balancer:
+    image: nginx
+    ports:
       - "80:80"
-    volumes: 
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./frontend:/usr/share/nginx/html:ro
     depends_on:
       - minitwitter-1
       - minitwitter-2
-
-
-volumes:
-  postgres_data:

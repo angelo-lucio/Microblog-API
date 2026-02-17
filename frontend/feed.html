@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="feed.css" />
+
+  <title>Smalltalk • Feed</title>
+</head>
+
+<body class="feed-body">
+
+  <!-- Reuse the same "big box" idea as your login page container -->
+  <div class="container feed-container">
+
+    <!-- TOP BLUE BAR -->
+    <div class="feed-topbar">
+      <div class="feed-brand">
+        <img src="smalltalklogo.svg" alt="Smalltalk Logo" class="feed-logo">
+        <div class="feed-brand-text">
+          <div class="feed-title">Smalltalk</div>
+          <div class="feed-subtitle">Short thoughts. Real conversations.</div>
+        </div>
+      </div>
+
+      <button class="feed-menu" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <!-- SECOND BLUE BAR (ONLY CREATE) -->
+    <div class="feed-actionbar">
+      <button class="feed-create-btn">Create</button>
+    </div>
+
+    <!-- MIDDLE CONTENT -->
+    <div class="feed-content">
+
+      <!-- POSTS LIST -->
+      <div class="posts">
+
+        <!-- Example: a friend post (NO edit/delete shown) -->
+        <div class="post-card">
+          <div class="post-head">
+            <div class="post-head-left">
+              <div class="post-user">@dario</div>
+              <div class="post-meta">Post ID: 104</div>
+            </div>
+          </div>
+
+          <div class="post-body">
+            Hello 👋 This is a friend post example.
+          </div>
+        </div>
+
+        <!-- Example: your post (edit/delete shown) -->
+        <div class="post-card">
+          <div class="post-head">
+            <div class="post-head-left">
+              <div class="post-user">@koki</div>
+              <div class="post-meta">Post ID: 105</div>
+            </div>
+
+            <!-- Later: only show these buttons if post belongs to current user -->
+            <div class="post-actions">
+              <button class="post-btn post-btn-light">Edit</button>
+              <button class="post-btn post-btn-danger">Delete</button>
+            </div>
+          </div>
+
+          <div class="post-body">
+            This is your post example. Only you will see Edit/Delete here later.
+          </div>
+        </div>
+
+        <!-- Another friend post -->
+        <div class="post-card">
+          <div class="post-head">
+            <div class="post-head-left">
+              <div class="post-user">@angelo</div>
+              <div class="post-meta">Post ID: 106</div>
+            </div>
+          </div>
+
+          <div class="post-body">
+            Another sample post from a friend in the feed.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
