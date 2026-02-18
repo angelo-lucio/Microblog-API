@@ -1,6 +1,6 @@
 import { type Express, type Request, type Response } from "express";
 import { db } from "./database";
-import { postsTable } from "./db/schema";
+import { postsTable, usersTable } from "./db/schema";
 import { eq } from "drizzle-orm";
 import authRoutes from "./auth";
 import authMiddleware from "./auth-middleware";
@@ -10,7 +10,16 @@ export const initializeAPI = (app: Express) => {
     app.use("/auth", authRoutes);
     // GET all posts
     app.get("/posts", async (req: Request, res: Response) => {
-        const posts = await db.select().from(postsTable);
+        const posts = await db
+            .select({
+                id: postsTable.id,
+                content: postsTable.content,
+                userId: postsTable.userId,
+                username: usersTable.username,
+            })
+            .from(postsTable)
+            .leftJoin(usersTable, eq(postsTable.userId, usersTable.id));
+
         res.send(posts);
     });
 
