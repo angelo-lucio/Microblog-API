@@ -1,5 +1,5 @@
 import express from "express";
-import { initializeAPI } from "./api";
+import { initializeAPI } from "./routes/api";
 import cors from 'cors'
 
 const port = 3000;

@@ -17,7 +17,9 @@ services:
       retries: 5
 
   minitwitter-1:
-    build: .
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
     restart: always
     ports:
       - "3000:3000"
@@ -28,7 +30,9 @@ services:
         condition: service_healthy
 
   minitwitter-2:
-    build: .
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
     restart: always
     ports:
       - "3002:3000"

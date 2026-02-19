@@ -1,6 +1,6 @@
 import { Router } from "express";
 import bcrypt from "bcrypt";
-import { db } from "./database.ts";
+import { db } from "./db/database.ts";
 import { usersTable } from "./db/schema.ts";
 import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";

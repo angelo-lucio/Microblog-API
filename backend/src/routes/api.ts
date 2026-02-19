@@ -1,10 +1,10 @@
 import { type Express, type Request, type Response } from "express";
-import { db } from "./database";
-import { postsTable, usersTable } from "./db/schema";
 import { eq } from "drizzle-orm";
-import authRoutes from "./auth";
-import authMiddleware from "./auth-middleware";
 import { Ollama } from "ollama";
+import { db } from "../db/database";
+import { postsTable, usersTable } from "../db/schema";
+import authMiddleware from "../middleware/auth-middleware";
+import authRoutes from "../auth";
 
 const ollamaClient = new Ollama({
   host: "http://ollama:11434",
