@@ -4,6 +4,11 @@ import { postsTable, usersTable } from "./db/schema";
 import { eq } from "drizzle-orm";
 import authRoutes from "./auth";
 import authMiddleware from "./auth-middleware";
+import { Ollama } from "ollama";
+
+const ollamaClient = new Ollama({
+  host: "http://ollama:11434",
+});
 
 export const initializeAPI = (app: Express) => {
     app.use(authMiddleware);
@@ -29,10 +34,27 @@ export const initializeAPI = (app: Express) => {
             return res.status(401).send({ error: "Unauthorized" });
         }
 
+        const content = req.body.content;
+
+        //AI hate speech check
+        const aiCheck = await ollamaClient.generate({
+            model: "llama3.2:1b",
+            prompt: `Is the following text hate speech? Answer only YES or NO:\n\n${content}`,
+        });
+
+        console.log(aiCheck.response);
+
+        if (aiCheck.response.trim().toUpperCase().includes("YES")) {
+            return res.status(400).send({
+                error: "Post rejected: Hate speech detected",
+            });
+        }
+
+        // Save if safe
         const newPost = await db
             .insert(postsTable)
             .values({
-                content: req.body.content,
+                content,
                 userId: req.user.id,
             })
             .returning();

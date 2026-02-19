@@ -48,3 +48,11 @@ services:
     depends_on:
       - minitwitter-1
       - minitwitter-2
+
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+    - "11434:11434"
+    volumes:
+    - ./docker-data/ollama:/root/.ollama
