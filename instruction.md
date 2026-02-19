@@ -1,7 +1,7 @@
 # Small Talk
 
 <p align="center">
-  <img src="./frontend/smalltalklogo.png" width="180" alt="Small Talk Logo" />
+  <img src="./frontend/assets/smalltalklogo.png" width="180" alt="Small Talk Logo" />
 </p>
 
 <p align="center">
