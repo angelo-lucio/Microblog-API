@@ -10,117 +10,166 @@ const ollamaClient = new Ollama({
   host: "http://ollama:11434",
 });
 
+/*
+  STRICT + FAST hate speech checker
+*/
+async function checkHateSpeech(content: string): Promise<boolean> {
+  const lower = content.toLowerCase();
+
+  //Strong keyword filter (instant)
+  const bannedWords = [
+    "kill",
+    "murder",
+    "rape",
+    "sex",
+    "porn",
+    "racist",
+    "hate",
+    "terror",
+    "violence",
+  ];
+
+  for (const word of bannedWords) {
+    if (lower.includes(word)) {
+      return true;
+    }
+  }
+
+  // 🟡 Secondary AI check (optional)
+  try {
+    const response = await ollamaClient.chat({
+      model: "tinyllama",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a strict content moderator. Answer ONLY YES or NO. YES if harmful or inappropriate.",
+        },
+        { role: "user", content }
+      ],
+      options: {
+        temperature: 0,
+        num_predict: 5,
+      },
+    });
+
+    const answer = response.message.content.trim().toUpperCase();
+    return answer.startsWith("YES");
+  } catch (error) {
+    return false;
+  }
+}
+
 export const initializeAPI = (app: Express) => {
-    app.use(authMiddleware);
-    app.use("/auth", authRoutes);
-    // GET all posts
-    app.get("/posts", async (req: Request, res: Response) => {
-        const posts = await db
-            .select({
-                id: postsTable.id,
-                content: postsTable.content,
-                userId: postsTable.userId,
-                username: usersTable.username,
-            })
-            .from(postsTable)
-            .leftJoin(usersTable, eq(postsTable.userId, usersTable.id));
+  app.use("/auth", authRoutes);
+  app.use(authMiddleware);
 
-        res.send(posts);
-    });
 
-    // POST new post
-    app.post("/posts", async (req: Request, res: Response) => {
-        if (!req.user) {
-            return res.status(401).send({ error: "Unauthorized" });
-        }
+  // GET all posts
+  app.get("/posts", async (req: Request, res: Response) => {
+    const posts = await db
+      .select({
+        id: postsTable.id,
+        content: postsTable.content,
+        userId: postsTable.userId,
+        username: usersTable.username,
+      })
+      .from(postsTable)
+      .leftJoin(usersTable, eq(postsTable.userId, usersTable.id));
 
-        const content = req.body.content;
+    res.send(posts);
+  });
 
-        //AI hate speech check
-        const aiCheck = await ollamaClient.generate({
-            model: "llama3.2:1b",
-            prompt: `Is the following text hate speech? Answer only YES or NO:\n\n${content}`,
-        });
+  // POST new post
+  app.post("/posts", async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).send({ error: "Unauthorized" });
+    }
 
-        console.log(aiCheck.response);
+    const content = req.body.content;
 
-        if (aiCheck.response.trim().toUpperCase().includes("YES")) {
-            return res.status(400).send({
-                error: "Post rejected: Hate speech detected",
-            });
-        }
+    if (!content || content.length < 1) {
+      return res.status(400).send({ error: "Content required" });
+    }
 
-        // Save if safe
-        const newPost = await db
-            .insert(postsTable)
-            .values({
-                content,
-                userId: req.user.id,
-            })
-            .returning();
+    // AI moderation
+    const containsHate = await checkHateSpeech(content);
 
-        res.send(newPost[0]);
-    });
+    if (containsHate) {
+      return res.status(400).send({
+        error: "Post rejected: Hate speech detected",
+      });
+    }
 
-    // PUT update post
-    app.put("/posts/:id", async (req: Request, res: Response) => {
-        if (!req.user) {
-            return res.status(401).send({ error: "Unauthorized" });
-        }
+    // Save if safe
+    const newPost = await db
+      .insert(postsTable)
+      .values({
+        content,
+        userId: req.user.id,
+      })
+      .returning();
 
-        const id = Number(req.params.id);
+    res.send(newPost[0]);
+  });
 
-        const existingPosts = await db
-            .select()
-            .from(postsTable)
-            .where(eq(postsTable.id, id));
+  // PUT update post
+  app.put("/posts/:id", async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).send({ error: "Unauthorized" });
+    }
 
-        if (existingPosts.length === 0) {
-            return res.status(404).send("Post not found");
-        }
+    const id = Number(req.params.id);
 
-        const post = existingPosts[0]!;
+    const existingPosts = await db
+      .select()
+      .from(postsTable)
+      .where(eq(postsTable.id, id));
 
-        if (post.userId !== req.user.id) {
-            return res.status(403).send({ error: "Forbidden" });
-        }
+    if (existingPosts.length === 0) {
+      return res.status(404).send("Post not found");
+    }
 
-        const updatedPost = await db
-            .update(postsTable)
-            .set({ content: req.body.content })
-            .where(eq(postsTable.id, id))
-            .returning();
+    const post = existingPosts[0]!;
 
-        res.send(updatedPost[0]);
-    });
+    if (post.userId !== req.user.id) {
+      return res.status(403).send({ error: "Forbidden" });
+    }
 
-    // DELETE post
-    app.delete("/posts/:id", async (req: Request, res: Response) => {
-        if (!req.user) {
-            return res.status(401).send({ error: "Unauthorized" });
-        }
+    const updatedPost = await db
+      .update(postsTable)
+      .set({ content: req.body.content })
+      .where(eq(postsTable.id, id))
+      .returning();
 
-        const id = Number(req.params.id);
+    res.send(updatedPost[0]);
+  });
 
-        const existingPosts = await db
-            .select()
-            .from(postsTable)
-            .where(eq(postsTable.id, id));
+  // DELETE post
+  app.delete("/posts/:id", async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).send({ error: "Unauthorized" });
+    }
 
-        if (existingPosts.length === 0) {
-            return res.status(404).send("Post not found");
-        }
+    const id = Number(req.params.id);
 
-        const post = existingPosts[0]!;
+    const existingPosts = await db
+      .select()
+      .from(postsTable)
+      .where(eq(postsTable.id, id));
 
-        if (post.userId !== req.user.id) {
-            return res.status(403).send({ error: "Forbidden" });
-        }
+    if (existingPosts.length === 0) {
+      return res.status(404).send("Post not found");
+    }
 
-        await db
-            .delete(postsTable)
-            .where(eq(postsTable.id, id));
+    const post = existingPosts[0]!;
 
-        res.send({ id });
-    });
+    if (post.userId !== req.user.id) {
+      return res.status(403).send({ error: "Forbidden" });
+    }
+
+    await db.delete(postsTable).where(eq(postsTable.id, id));
+
+    res.send({ id });
+  });
 };

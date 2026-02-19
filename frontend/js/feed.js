@@ -174,11 +174,17 @@ function cancelEdit(postId, originalContent) {
 // CREATE POST
 async function createPost() {
   const contentInput = document.getElementById("postInput");
-  const content = contentInput.value.trim();
+  const messageDiv = document.getElementById("feedMessage");
+  const submitBtn = document.getElementById("submitPostBtn");
 
+  const content = contentInput.value.trim();
   if (!content) return;
 
   const token = localStorage.getItem("token");
+
+  //  Show loading message
+  messageDiv.innerText = "Smalltalk moderation system is reviewing your post...";
+  submitBtn.disabled = true;
 
   try {
     const res = await fetch(`${API_BASE}/posts`, {
@@ -191,14 +197,21 @@ async function createPost() {
     });
 
     if (!res.ok) {
-      throw new Error("Post creation failed");
+      messageDiv.innerText = "This post violates our community guidelines and cannot be published.";
+      submitBtn.disabled = false;
+      return;
     }
 
-    contentInput.value = "";   // clear textarea
-    loadPosts();               // refresh feed
+    contentInput.value = "";
+    messageDiv.innerText = "";
+    submitBtn.disabled = false;
+
+    loadPosts();
 
   } catch (err) {
     console.error("Create post failed", err);
+    messageDiv.innerText = "Something went wrong.";
+    submitBtn.disabled = false;
   }
 }
 
