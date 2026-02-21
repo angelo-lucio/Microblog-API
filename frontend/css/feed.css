@@ -1,0 +1,222 @@
+/* Your style.css sets body as flex center with height 100vh (login page) :contentReference[oaicite:3]{index=3}
+   For feed, we need scrolling — so we override it here. */
+.feed-body {
+  background: #f6f5f7;
+  margin: 0;
+  min-height: 100vh;
+
+  display: flex;
+  justify-content: center;   /* horizontal center */
+  align-items: center;       /* vertical center */
+
+  font-family: 'Montserrat', sans-serif;
+}
+
+
+/* Reuse your .container look (width, radius, shadow) :contentReference[oaicite:6]{index=6} */
+.feed-container{
+  min-height: 680px;
+  overflow: hidden; /* keeps bars clean */
+}
+
+/* TOP BLUE BAR (same Smalltalk blue you use in overlay/buttons) :contentReference[oaicite:7]{index=7} :contentReference[oaicite:8]{index=8} */
+.feed-topbar{
+  height: 90px;
+  background: #171f4e;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+}
+
+.feed-brand{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.feed-logo{
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+}
+
+.feed-title{
+  font-weight: 800;
+  letter-spacing: .5px;
+  font-size: 20px;
+}
+
+.feed-subtitle{
+  font-size: 12px;
+  opacity: .9;
+  margin-top: 2px;
+}
+
+/* Hamburger menu */
+.feed-menu{
+  width: 46px;
+  height: 46px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.85);
+  border-radius: 10px;
+  padding: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.feed-menu span{
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: #fff;
+  margin: 2px 0;
+}
+
+/* SECOND BLUE BAR (ONLY CREATE) */
+.feed-actionbar{
+  height: 90px;
+  background: #171f4e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 22px;
+}
+
+.feed-create-btn{
+  /* uses your global button base from style.css (rounded, uppercase, bold) :contentReference[oaicite:9]{index=9} */
+  background: #fff;
+  color: #171f4e;
+  border: 1px solid #fff;
+  min-width: 220px;
+}
+
+/* CONTENT AREA */
+.feed-content{
+  background: #f6f5f7;
+  padding: 18px;
+  height: calc(680px - 180px); /* container min-height minus 2 bars */
+  overflow-y: auto;
+}
+
+/* POSTS */
+.posts{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.post-card{
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  padding: 14px 14px 12px;
+}
+
+.post-head{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.post-user{
+  font-weight: 800;
+  color: #171f4e;
+}
+
+.post-meta{
+  font-size: 12px;
+  opacity: .75;
+  margin-top: 2px;
+}
+
+.post-body{
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* Edit/Delete buttons inside post */
+.post-actions{
+  display: flex;
+  gap: 8px;
+}
+
+.post-btn{
+  padding: 10px 16px;
+  border-radius: 18px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.post-btn-light{
+  background: #fff;
+  color: #171f4e;
+  border: 1px solid #171f4e;
+}
+
+.post-btn-danger{
+  background: #b00020;
+  border: 1px solid #b00020;
+  color: #fff;
+}
+
+.feed-container {
+  width: 850px;
+  max-width: 95%;
+}
+
+/* Mobile */
+@media (max-width: 820px){
+  .feed-container{ width: 95vw; }
+  .feed-content{ height: auto; max-height: 70vh; }
+}
+
+.create-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+#postInput {
+  flex: 1;                /* takes full width */
+  resize: none;
+  height: 50px;
+  padding: 10px 14px;
+  border-radius: 25px;
+  border: 1px solid #ccc;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+#submitPostBtn {
+  white-space: nowrap;
+  height: 50px;
+  padding: 0 22px;
+}
+
+.edit-textarea {
+  width: 100%;
+  resize: none;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.feed-message {
+  text-align: center;
+  margin-bottom: 15px;
+  font-weight: 600;
+  color: #555;
+}
+
+
