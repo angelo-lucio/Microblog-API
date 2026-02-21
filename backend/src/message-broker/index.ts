@@ -5,16 +5,16 @@ import { textAnalysis } from "../services/ai"
 import { postsTable } from "../db/schema"
 import { db } from "../db/database.ts"
 
-export let sentimentQueue: Queue
-let sentimentWorker: Worker
-
-export const initializeMessageBroker = () => {
-    const connection = new IORedis({
+const connection = new IORedis({
         host: process.env.REDIS_HOST || "redis",
         port: parseInt(process.env.REDIS_PORT || "6379"),
         maxRetriesPerRequest: null,
-    })
-    sentimentQueue = new Queue('sentiment', { connection })
+    });
+
+export const sentimentQueue = new Queue("sentiment", { connection })
+let sentimentWorker: Worker
+
+export const initializeMessageBroker = () => {
     console.log("Sentiment queue initialized")
     if (process.env.SERVER_ROLE === "all" || process.env.SERVER_ROLE === "worker") {
         sentimentWorker = new Worker('sentiment', analyzeSentiment, { connection })

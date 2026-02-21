@@ -116,14 +116,14 @@ export const initializeAPI = (app: Express) => {
     // AI moderation including message broker for async processing 
     const containsHate = await checkHateSpeech(content);
     
-    // changed for logging and analysing sentiment of posts
+   /* // changed for logging and analysing sentiment of posts
     await sentimentQueue.add('check-sentiment', { content, userId: req.user.id })
     console.log(`Post content sent to message broker for sentiment analysis`);
     if (containsHate) {
       return res.status(400).send({
         error: "Post rejected: Hate or unallowed speech detected",
       });
-    }
+    } */
 
     // Save if safe
     const newPost = await db
