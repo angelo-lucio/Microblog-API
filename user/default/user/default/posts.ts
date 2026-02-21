@@ -1,4 +1,4 @@
-import { type Express, type Request, type Response } from "express";
+/* import { type Express, type Request, type Response } from "express";
 import { postsTable } from "../db/schema";
 import { db } from "../database";
 import { and, eq } from "drizzle-orm";
@@ -40,6 +40,7 @@ export const initializePostsAPI = (app: Express) => {
             res.status(400).send({ error: "Content is required" });
             return;
         }
+        //
         const [newPost]  = await db.insert(postsTable).values({ content, userId }).returning();
 
         if (!newPost) {
@@ -104,4 +105,4 @@ export const initializePostsAPI = (app: Express) => {
         res.send({ Feedback: "Post deleted successfully", deletedPost: deletedPost[0] });
     });
 })
-}
+} */

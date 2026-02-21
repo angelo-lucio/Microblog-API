@@ -18,18 +18,18 @@ services:
 
   minitwitter-1:
     image: minitwitter
-    build: .          # to build docker image with the Dockerfile in this directory
+    build: backend       # to build docker image with the Dockerfile in backend directory
     container_name: minitwitter-1
 
     environment:
-      DATABASE_URL: postgresql://postgres:supersecret123@db:5432/minitwitter
+      DATABASE_URL: postgresql://postgres:supersecret123@postgres:5432/minitwitter
       REDIS_HOST: redis
       OLLAMA_HOST: http://ollamaforminitwitter:11434
       SERVER_ROLE: api
     depends_on:
         redis:        # needed to start Redis before API
           condition: service_healthy
-        db:            # needed to start DB befor API
+        postgres:            # needed to start DB befor API
           condition: service_started
     restart: always
 
@@ -38,7 +38,7 @@ services:
     container_name: minitwitter-2
 
     environment:
-      DATABASE_URL: postgresql://postgres:supersecret123@db:5432/minitwitter
+      DATABASE_URL: postgresql://postgres:supersecret123@postgres:5432/minitwitter
       REDIS_HOST: redis
       OLLAMA_HOST: http://ollamaforminitwitter:11434
       SERVER_ROLE: api
@@ -47,7 +47,7 @@ services:
           condition: service_started
         redis:        # needed to start Redis before API
           condition: service_healthy
-        db:            # needed to start DB befor API
+        postgres:            # needed to start DB befor API
           condition: service_started
     restart: always
 
@@ -55,7 +55,7 @@ services:
     image: minitwitter
     container_name: sentiment-worker
     environment:
-      DATABASE_URL: postgresql://postgres:supersecret123@db:5432/minitwitter
+      DATABASE_URL: postgresql://postgres:supersecret123@postgres:5432/minitwitter
       REDIS_HOST: redis
       OLLAMA_HOST: http://ollamaforminitwitter:11434
       SERVER_ROLE: worker
@@ -64,7 +64,7 @@ services:
         condition: service_started
       redis:        # needed to start Redis before API
         condition: service_healthy
-      db:            # needed to start DB befor API
+      postgres:            # needed to start DB befor API
         condition: service_started
     restart: always
 
