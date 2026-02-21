@@ -6,6 +6,7 @@ import { postsTable, usersTable } from "../db/schema";
 import authMiddleware from "../middleware/auth-middleware";
 import authRoutes from "../auth";
 import { sentimentQueue } from "../message-broker/index.ts";
+import { parseOptionalDef } from "zod-to-json-schema";
 
 const ollamaClient = new Ollama({
   host: "http://ollama:11434",
@@ -112,33 +113,35 @@ export const initializeAPI = (app: Express) => {
     if (!content || content.length < 1) {
       return res.status(400).send({ error: "Content required" });
     }
-
-    // AI moderation including message broker for async processing 
-    const containsHate = await checkHateSpeech(content);
-    
-   /* // changed for logging and analysing sentiment of posts
-    await sentimentQueue.add('check-sentiment', { content, userId: req.user.id })
-    console.log(`Post content sent to message broker for sentiment analysis`);
-    if (containsHate) {
-      return res.status(400).send({
-        error: "Post rejected: Hate or unallowed speech detected",
-      });
-    } */
-
-    // Save if safe
+  //save anyway and use message broker for async AI moderation and sentiment analysis
     const newPost = await db
-      .insert(postsTable)
-      .values({
+        .insert(postsTable)
+        .values({
         content,
         userId: req.user.id,
-      })
-      .returning();
+      }).returning();
 
       if (!newPost) {
           res.status(500).send({ error: "Failed to create post" });
           return;
-    };
+    }
 
+    const postId = newPost[0]!.id;
+
+    await sentimentQueue.add('analyze-sentiment', { postId })
+    console.log(`Post ${postId} created and sent to message broker for sentiment analysis`);
+
+    res.status(201).send(newPost[0]);
+
+    
+   // changed for logging and analysing sentiment of posts
+    await sentimentQueue.add('check-sentiment', { postId })
+    console.log(`Post content sent to message broker for sentiment analysis`);
+    if (await checkHateSpeech(content)) {
+      return res.status(400).send({
+        error: "Post rejected: Hate or unallowed speech detected",
+      });
+    }
 
     res.send(newPost[0]);
   });
