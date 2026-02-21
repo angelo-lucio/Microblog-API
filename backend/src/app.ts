@@ -1,14 +1,40 @@
-import express from "express";
+import express, { type Request, type Response } from "express";
 import { initializeAPI } from "./routes/api";
-import cors from 'cors'
+import  initializeAuthAPI  from "./auth";
+import { initializeMessageBroker } from "./message-broker";
+import cors from "cors"
 
+const SERVER_ROLE = process.env.SERVER_ROLE || "all"
+const allowedServerRoles = ["api", "worker", "all"]
+if (!allowedServerRoles.includes(SERVER_ROLE)) {
+  console.error(`Invalid SERVER_ROLE: ${SERVER_ROLE}`)
+  process.exit(1)
+}
+
+ /* const app = express();
 const port = 3000;
-const app = express();
-app.use(express.json());
-app.use(cors({ origin: ["http://localhost:5173"], credentials: true }))
 
-initializeAPI(app);
+
+app.use(express.json());
 
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Example app listening on port ${port}`);
 });
+
+initializeAPI(app);
+initializeAuthAPI(app); */
+
+initializeMessageBroker();
+
+if (SERVER_ROLE === "all" || SERVER_ROLE === "api") {
+  const port = 3000
+
+  const app = express()
+  app.use(express.json())
+  app.use(cors())
+  initializeAPI(app)
+
+  app.listen(port, () => {
+    console.log(`Microblog listening on port ${port}`)
+  })
+}
