@@ -12,3 +12,4 @@ RUN bun install
 
 # Start the Application
 CMD ["bun", "src/app.ts"]
+

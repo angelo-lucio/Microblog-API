@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "dependencies": {
     "@faker-js/faker": "^10.1.0",
     "@types/cors": "^2.8.19",
@@ -17,34 +16,24 @@
     "zod": "^3.24.1",
     "zod-to-json-schema": "^3.25.1"
   },
-=======
-  "name": "posts-api",
-  "module": "src/app.ts",
-  "type": "module",
-  "private": true,
->>>>>>> 1d686cc7f620fe1407205ad87f9156e79eb91e37
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/bun": "latest",
-    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.16.0",
-    "drizzle-kit": "^0.31.9"
+    "drizzle-kit": "^0.31.8",
+    "tsx": "^4.21.0"
   },
+  "name": "microblog-api",
+  "module": "src/app.ts",
+  "type": "module",
+  "private": true,
   "peerDependencies": {
     "typescript": "^5"
   },
-  "dependencies": {
-    "bcrypt": "^6.0.0",
-    "cors": "^2.8.6",
-    "dotenv": "^17.3.1",
-    "drizzle-orm": "^0.45.1",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
-    "ollama": "^0.6.3",
-    "pg": "^8.18.0",
-    "zod": "^4.3.6",
-    "zod-to-json-schema": "^3.25.1"
+  "scripts": {
+    "dev": "bun run src/app.ts",
+    "start": "bun run src/app.ts",
+    "db:push": "drizzle-kit push"
   }
 }
