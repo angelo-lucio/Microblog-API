@@ -24,7 +24,7 @@ export const initializePostsAPI = (app: Express) => {
             // if post is negative or dangerous, only show it to the user who created it
             if (post.sentiment === "negative" || post.sentiment === "dangerous") 
                 return post.userId === userId;
-                return false;
+                return true;
         });
         res.send(validPosts);
     };
