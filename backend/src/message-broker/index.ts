@@ -3,7 +3,7 @@ import IORedis from "ioredis"
 import { eq } from "drizzle-orm"
 import { textAnalysis } from "../services/ai"
 import { postsTable } from "../db/schema"
-import { db } from "../database"
+import { db } from "../db/database.ts"
 
 export let sentimentQueue: Queue
 let sentimentWorker: Worker
