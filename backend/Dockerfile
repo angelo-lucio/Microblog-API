@@ -1,15 +1,15 @@
-# Base Image with Bun pre-installed
-FROM oven/bun:latest
+FROM oven/bun:1
 
-# Set the working directory
 WORKDIR /app
 
-# Copy the Source Code
-COPY . /app/
+COPY package.json ./
 
-# Install the dependencies
 RUN bun install
 
-# Start the Application
+COPY . .
+
+EXPOSE 3000
+
 CMD ["bun", "src/app.ts"]
+
 

@@ -5,8 +5,6 @@ import { db } from "../db/database";
 import { postsTable, usersTable } from "../db/schema";
 import authMiddleware from "../middleware/auth-middleware";
 import authRoutes from "../auth";
-import { sentimentQueue } from "../message-broker/index.ts";
-import { parseOptionalDef } from "zod-to-json-schema";
 
 const ollamaClient = new Ollama({
   host: "http://ollama:11434",
@@ -66,40 +64,20 @@ export const initializeAPI = (app: Express) => {
   app.use("/auth", authRoutes);
   app.use(authMiddleware);
 
-  // Test endpoint to verify server is running
-  app.get("/hello-world", (req: Request, res: Response) => {
-    res.send("Hello World!");
-  });
 
   // GET all posts
   app.get("/posts", async (req: Request, res: Response) => {
-  
-  // Check if user is authenticated
-     const userId = req.user?.id;
-        if (!userId) {
-            res.status(401).send({ error: "Unauthorized" });
-            return;
-    };
-
     const posts = await db
       .select({
         id: postsTable.id,
         content: postsTable.content,
         userId: postsTable.userId,
         username: usersTable.username,
-        // Include sentiment in the response to allow frontend filtering
-        sentiment: postsTable.sentiment,
       })
       .from(postsTable)
       .leftJoin(usersTable, eq(postsTable.userId, usersTable.id));
 
-      // Filter out negative and dangerous posts that are not created by the user
-      const validPosts = posts.filter(post => {
-        if (post.sentiment === "negative" || post.sentiment === "dangerous") 
-            return post.userId === req.user?.id;
-            return true;
-      });
-    res.send(validPosts);
+    res.send(posts);
   });
 
   // POST new post
@@ -113,35 +91,24 @@ export const initializeAPI = (app: Express) => {
     if (!content || content.length < 1) {
       return res.status(400).send({ error: "Content required" });
     }
-  //save anyway and use message broker for async AI moderation and sentiment analysis
-    const newPost = await db
-        .insert(postsTable)
-        .values({
-        content,
-        userId: req.user.id,
-      }).returning();
 
-      if (!newPost) {
-          res.status(500).send({ error: "Failed to create post" });
-          return;
-    }
+    // AI moderation
+    const containsHate = await checkHateSpeech(content);
 
-    const postId = newPost[0]!.id;
-
-    await sentimentQueue.add('analyze-sentiment', { postId })
-    console.log(`Post ${postId} created and sent to message broker for sentiment analysis`);
-
-    res.status(201).send(newPost[0]);
-
-    
-   // changed for logging and analysing sentiment of posts
-    await sentimentQueue.add('check-sentiment', { postId })
-    console.log(`Post content sent to message broker for sentiment analysis`);
-    if (await checkHateSpeech(content)) {
+    if (containsHate) {
       return res.status(400).send({
-        error: "Post rejected: Hate or unallowed speech detected",
+        error: "Post rejected: Hate speech detected",
       });
     }
+
+    // Save if safe
+    const newPost = await db
+      .insert(postsTable)
+      .values({
+        content,
+        userId: req.user.id,
+      })
+      .returning();
 
     res.send(newPost[0]);
   });

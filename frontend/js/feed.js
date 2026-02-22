@@ -26,13 +26,6 @@ function getUserIdFromToken() {
 }
 // LOAD POSTS
 async function loadPosts() {
-  // token
-  const token = localStorage.getItem("token");
-  if (!token) {
-    window.location.href = "login.html";
-    return;
-  }
-
   const container = document.getElementById("postsContainer");
   const messageDiv = document.getElementById("feedMessage");
 
@@ -40,18 +33,7 @@ async function loadPosts() {
   messageDiv.innerText = "Loading posts...";
 
   try {
-    const res = await fetch(`${API_BASE}/posts`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      }
-    });
-    
-    if (!res.ok) {
-      throw new Error("Failed to fetch posts");
-    }
-
+    const res = await fetch(`${API_BASE}/posts`);
     const posts = await res.json();
 
     if (!posts.length) {
@@ -68,6 +50,7 @@ async function loadPosts() {
       card.classList.add("post-card");
 
       let actions = "";
+
       if (Number(post.userId) === loggedInUserId) {
         actions = `
           <div class="post-actions">
@@ -91,6 +74,7 @@ async function loadPosts() {
         </div>
         <div class="post-body">${post.content}</div>
       `;
+
       container.appendChild(card);
     });
 
@@ -213,8 +197,7 @@ async function createPost() {
     });
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      messageDiv.innerText = errorData.error || `Server error: ${res.status}. Please try again later.`;
+      messageDiv.innerText = "This post violates our community guidelines and cannot be published.";
       submitBtn.disabled = false;
       return;
     }

@@ -17,60 +17,33 @@ services:
       retries: 5
 
   minitwitter-1:
-    image: minitwitter
-    build: backend       # to build docker image with the Dockerfile in backend directory
-    container_name: minitwitter-1
-
-    environment:
-      DATABASE_URL: postgresql://postgres:supersecret123@postgres:5432/minitwitter
-      REDIS_HOST: redis
-      OLLAMA_HOST: http://ollamaforminitwitter:11434
-      SERVER_ROLE: api
-    depends_on:
-        redis:        # needed to start Redis before API
-          condition: service_healthy
-        postgres:            # needed to start DB befor API
-          condition: service_started
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
     restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:supersecret123@postgres:5432/minitwitter
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   minitwitter-2:
-    image: minitwitter
-    container_name: minitwitter-2
-
-    environment:
-      DATABASE_URL: postgresql://postgres:supersecret123@postgres:5432/minitwitter
-      REDIS_HOST: redis
-      OLLAMA_HOST: http://ollamaforminitwitter:11434
-      SERVER_ROLE: api
-    depends_on:
-        minitwitter-1:
-          condition: service_started
-        redis:        # needed to start Redis before API
-          condition: service_healthy
-        postgres:            # needed to start DB befor API
-          condition: service_started
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
     restart: always
-
-  sentiment-worker:
-    image: minitwitter
-    container_name: sentiment-worker
+    ports:
+      - "3002:3000"
     environment:
-      DATABASE_URL: postgresql://postgres:supersecret123@postgres:5432/minitwitter
-      REDIS_HOST: redis
-      OLLAMA_HOST: http://ollamaforminitwitter:11434
-      SERVER_ROLE: worker
+      - DATABASE_URL=postgresql://postgres:supersecret123@postgres:5432/minitwitter
     depends_on:
-      minitwitter-1:
-        condition: service_started
-      redis:        # needed to start Redis before API
+      postgres:
         condition: service_healthy
-      postgres:            # needed to start DB befor API
-        condition: service_started
-    restart: always
 
   load-balancer:
     image: nginx
-    container_name: nginx-load-balancer
     ports:
       - "80:80"
     volumes:
@@ -79,28 +52,13 @@ services:
     depends_on:
       - minitwitter-1
       - minitwitter-2
-  
+
   ollama:
-    image: ollama/ollama:latest
-    container_name: ollamaforminitwitter
-    restart: always
+    image: ollama/ollama
+    container_name: ollama
     ports:
-      - "11434:11434" # Ollama API port, it doesn't conflict with installed version
+    - "11434:11434"
     volumes:
-      - ./docker-data/ollama:/root/.ollama
-
-  redis:
-    image: redis/redis-stack:latest
-    container_name: redis
-    restart: always
-    ports:
-      - "6379:6379" # Redis default port
-      - "8001:8001" # Redis Web UI port
-    healthcheck:
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  postgres_data:
+    - ./docker-data/ollama:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=24
