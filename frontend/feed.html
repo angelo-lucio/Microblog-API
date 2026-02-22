@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/feed.css" />
+
+  <title>Smalltalk • Feed</title>
+</head>
+
+<body class="feed-body">
+
+  <div class="container feed-container">
+
+    <!-- TOP BAR -->
+    <div class="feed-topbar">
+      <div class="feed-brand">
+        <img src="assets/smalltalklogo.svg" alt="Smalltalk Logo" class="feed-logo">
+        <div class="feed-brand-text">
+          <div class="feed-title">Smalltalk</div>
+          <div class="feed-subtitle">Short thoughts. Real conversations.</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button id="logoutBtn" class="post-btn post-btn-light">
+          Logout
+        </button>
+
+        <button class="feed-menu" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ACTION BAR -->
+    <div class="feed-actionbar">
+      <div class="create-box">
+        <textarea id="postInput" placeholder="What's on your mind?"></textarea>
+        <button id="submitPostBtn" class="feed-create-btn">Post</button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="feed-content">
+      <div id="feedMessage" class="feed-message"></div>
+      <div class="posts" id="postsContainer">
+        <!-- Posts will be inserted here dynamically -->
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/feed.js"></script>
+
+</body>
+
+</html>
