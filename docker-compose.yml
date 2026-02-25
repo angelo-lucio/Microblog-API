@@ -71,3 +71,10 @@ services:
     - ./docker-data/ollama:/root/.ollama
     environment:
       - OLLAMA_KEEP_ALIVE=24
+
+  mini-twitter-frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:80
