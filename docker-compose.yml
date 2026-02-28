@@ -1,80 +1,105 @@
 services:
-  postgres:
-    image: postgres
+  db:
+    image: postgres:16
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     container_name: my-postgres
     restart: always
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_PASSWORD=supersecret123
-      - POSTGRES_DB=minitwitter
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: supersecret123
+      POSTGRES_DB: minitwitter
     volumes:
-      - ./docker-data:/var/lib/postgresql
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - postgres_data:/var/lib/postgresql
 
   minitwitter-1:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
-    restart: always
-    ports:
-      - "3000:3000"
+    build: .      
+    image: minitwitter-app
+    container_name: minitwitter-1
+
     environment:
-      - DATABASE_URL=postgresql://postgres:supersecret123@postgres:5432/minitwitter
+      DATABASE_URL: postgresql://postgres:supersecret123@db:5432/minitwitter
     depends_on:
-      postgres:
-        condition: service_healthy
+        redis:        # needed to start Redis before API
+          condition: service_healthy
+        db:            # needed to start DB befor API
+          condition: service_started
+    restart: always
 
   minitwitter-2:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
-    restart: always
-    ports:
-      - "3002:3000"
+    image: minitwitter-app # we can reuse the same image for the second instance
+    container_name: minitwitter-2
+
     environment:
-      - DATABASE_URL=postgresql://postgres:supersecret123@postgres:5432/minitwitter
+      DATABASE_URL: postgresql://postgres:supersecret123@db:5432/minitwitter
     depends_on:
-      postgres:
+        redis:        # needed to start Redis before API
+          condition: service_healthy
+        db:            # needed to start DB befor API
+          condition: service_started
+    restart: always
+
+  sentiment-worker:
+    image: minitwitter-app # reuse the same image for the worker
+    container_name: sentiment-worker
+
+    environment:
+      DATABASE_URL: postgresql://postgres:supersecret123@db:5432/minitwitter
+      REDIS_HOST: redis
+      OLLAMA_HOST: http://ollamaforminitwitter:11434
+      SERVER_ROLE: worker
+    depends_on:
+      redis:        # needed to start Redis before API
         condition: service_healthy
+      db:            # needed to start DB befor API
+        condition: service_started
+    restart: always
 
   load-balancer:
-    image: nginx
+    image: nginx:latest
+    container_name: load-balancer
+    restart: always
     ports:
       - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./frontend:/usr/share/nginx/html:ro
+    volumes: 
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - minitwitter-1
       - minitwitter-2
-
-  redis: 
-    image: redis/redis-stack:latest 
-    ports: 
-      - 6379:6379 
-      - 8001:8001
-    healthcheck: 
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ] 
-      interval: 10s
-
+  
   ollama:
-    image: ollama/ollama
-    container_name: ollama
+    image: ollama/ollama:latest
+    container_name: ollamaforminitwitter
+    restart: always
     ports:
-    - "11434:11434"
+      - "11434:11434" # Ollama API port, it doesn't conflict with installed version
     volumes:
-    - ./docker-data/ollama:/root/.ollama
-    environment:
-      - OLLAMA_KEEP_ALIVE=24
+      - ./docker-data/ollama:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
-  mini-twitter-frontend:
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:80
+  redis:
+    image: redis/redis-stack:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379" # Redis default port
+      - "8001:8001" # Redis Web UI port
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:  
+  postgres_data:

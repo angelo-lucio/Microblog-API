@@ -1,175 +1,174 @@
 import { type Express, type Request, type Response } from "express";
-import { eq } from "drizzle-orm";
-import { Ollama } from "ollama";
-import { db } from "../db/database";
-import { postsTable, usersTable } from "../db/schema";
-import authMiddleware from "../middleware/auth-middleware";
-import authRoutes from "../auth";
-
-const ollamaClient = new Ollama({
-  host: "http://ollama:11434",
-});
-
-/*
-  STRICT + FAST hate speech checker
-*/
-async function checkHateSpeech(content: string): Promise<boolean> {
-  const lower = content.toLowerCase();
-
-  //Strong keyword filter (instant)
-  const bannedWords = [
-    "kill",
-    "murder",
-    "rape",
-    "sex",
-    "porn",
-    "racist",
-    "hate",
-    "terror",
-    "violence",
-  ];
-
-  for (const word of bannedWords) {
-    if (lower.includes(word)) {
-      return true;
-    }
-  }
-
-  // 🟡 Secondary AI check (optional)
-  try {
-    const response = await ollamaClient.chat({
-      model: "tinyllama",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a strict content moderator. Answer ONLY YES or NO. YES if harmful or inappropriate.",
-        },
-        { role: "user", content }
-      ],
-      options: {
-        temperature: 0,
-        num_predict: 5,
-      },
-    });
-
-    const answer = response.message.content.trim().toUpperCase();
-    return answer.startsWith("YES");
-  } catch (error) {
-    return false;
-  }
-}
+import { postsTable } from "../db/schema";
+import { db } from "../db/database.ts";
+import { and, eq } from "drizzle-orm";
+import { sentimentQueue } from "../message-broker/index.ts";
+import authMiddleware from "../middleware/auth-middleware.ts";
 
 export const initializeAPI = (app: Express) => {
-  app.use("/auth", authRoutes);
-  app.use(authMiddleware);
+  app.get("/hello-world", (req: Request, res: Response) => {
+    res.send("Hello World!");
+  });
 
+  // apply auth middleware to all /posts routes
+  app.use("/posts", authMiddleware);
 
   // GET all posts
   app.get("/posts", async (req: Request, res: Response) => {
-    const posts = await db
-      .select({
-        id: postsTable.id,
-        content: postsTable.content,
-        userId: postsTable.userId,
-        username: usersTable.username,
-      })
-      .from(postsTable)
-      .leftJoin(usersTable, eq(postsTable.userId, usersTable.id));
-
-    res.send(posts);
-  });
-
-  // POST new post
-  app.post("/posts", async (req: Request, res: Response) => {
-    if (!req.user) {
+    const userId = req.user?.id;
+    if (!userId) {
       return res.status(401).send({ error: "Unauthorized" });
     }
+    // fetch all posts from database
+    const allPosts = await db.select().from(postsTable);
 
-    const content = req.body.content;
+    const validPosts = allPosts.filter((post) => {
+      // if post is negative or dangerous, only show it to the user who created it
+      if (post.sentiment === "negative" || post.sentiment === "dangerous")
+        return post.userId === userId;
+      return true;
+    });
+    res.send(validPosts);
+  });
 
-    if (!content || content.length < 1) {
-      return res.status(400).send({ error: "Content required" });
+  // POST create new post
+  app.post("/posts", async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).send({ error: "Unauthorized" });
+      return;
     }
-
-    // AI moderation
-    const containsHate = await checkHateSpeech(content);
-
-    if (containsHate) {
-      return res.status(400).send({
-        error: "Post rejected: Hate speech detected",
-      });
+    const { content } = req.body;
+    if (!content) {
+      res.status(400).send({ error: "Content is required" });
+      return;
     }
-
-    // Save if safe
-    const newPost = await db
+    const [newPost] = await db
       .insert(postsTable)
-      .values({
-        content,
-        userId: req.user.id,
-      })
+      .values({ content, userId })
       .returning();
 
-    res.send(newPost[0]);
+    if (!newPost) {
+      res.status(500).send({ error: "Failed to create post" });
+      return;
+    }
+
+    // send post to message broker for sentiment analysis
+    await sentimentQueue.add("analyze-sentiment", { postId: newPost.id });
+    console.log(
+      `Post ${newPost.id} created and sent to message broker for sentiment analysis`,
+    );
+
+    res.status(201).send(newPost);
   });
+
+  // GET single post by id
+  app.get("/posts/:id", async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).send({ error: "Unauthorized" });
+      return;
+    }
+    const id = Number(req.params.id);
+    if (!id) {
+      res.status(400).send({ error: "Invalid post id" });
+      return;
+    }
+    const post = await db.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
+    if (!post.length) {
+      res.status(404).send({ error: "Post not found" });
+      return;
+    }
+    const foundPost = post[0];
+    if (!foundPost) {
+      res.status(404).send({ error: "Post not found" });
+      return;
+        }
+    res.send(foundPost);
+  } );
 
   // PUT update post
   app.put("/posts/:id", async (req: Request, res: Response) => {
-    if (!req.user) {
-      return res.status(401).send({ error: "Unauthorized" });
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).send({ error: "Unauthorized" });
+      return;
     }
 
-    const id = Number(req.params.id);
-
-    const existingPosts = await db
-      .select()
-      .from(postsTable)
-      .where(eq(postsTable.id, id));
-
-    if (existingPosts.length === 0) {
-      return res.status(404).send("Post not found");
+    const postId = Number(req.params.id);
+    if (!postId) {
+      res.status(400).send({ error: "Invalid post id" });
+      return;
     }
 
-    const post = existingPosts[0]!;
-
-    if (post.userId !== req.user.id) {
-      return res.status(403).send({ error: "Forbidden" });
+    const { content } = req.body;
+    if (!content) {
+      res.status(400).send({ error: "Content is required" });
+      return;
     }
-
+    
     const updatedPost = await db
       .update(postsTable)
-      .set({ content: req.body.content })
-      .where(eq(postsTable.id, id))
-      .returning();
+      .set({ 
+        content: content,
 
-    res.send(updatedPost[0]);
+        // resetting the sentiment triggering
+        sentiment: "pending",
+        correction: "",
+      })
+      .where(and(eq(postsTable.id, postId), eq(postsTable.userId, userId)))
+      .returning(); // returning the updated post
+
+    if (!updatedPost.length) {
+      res.status(404).send({ error: "Post not found or unauthorized" });
+      return;
+    };
+
+    // resending post to message broker for sentiment analysis in case content changed
+    await sentimentQueue.add("analyze-sentiment", { content, postId });
+    console.log(
+      `Post ${ content } updated and sent to message broker for sentiment analysis`,
+    );
+    
+    const validPosts = updatedPost.filter((post) => {
+
+      // if post is negative or dangerous, only show it to the user who created it
+      if (post.sentiment === "negative" || post.sentiment === "dangerous")
+        return post.userId === userId;
+      return true;
+    });
+  
+    res.status(201).send({ ...updatedPost[0], validPosts });
   });
 
   // DELETE post
   app.delete("/posts/:id", async (req: Request, res: Response) => {
-    if (!req.user) {
-      return res.status(401).send({ error: "Unauthorized" });
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).send({ error: "Unauthorized" });
+      return;
     }
-
-    const id = Number(req.params.id);
-
-    const existingPosts = await db
+    const postId = Number(req.params.id);
+    if (!postId) {
+      res.status(400).send({ error: "Invalid post id" });
+      return;
+    }
+    const deletedPost = await db
       .select()
       .from(postsTable)
-      .where(eq(postsTable.id, id));
-
-    if (existingPosts.length === 0) {
-      return res.status(404).send("Post not found");
+      .where(and(eq(postsTable.id, postId), eq(postsTable.userId, userId)))
+      .limit(1);
+    if (!deletedPost.length) {
+      res.status(404).send({ error: "Post not found or unauthorized" });
+      return;
     }
-
-    const post = existingPosts[0]!;
-
-    if (post.userId !== req.user.id) {
-      return res.status(403).send({ error: "Forbidden" });
-    }
-
-    await db.delete(postsTable).where(eq(postsTable.id, id));
-
-    res.send({ id });
+    await db
+      .delete(postsTable)
+      .where(and(eq(postsTable.id, postId), eq(postsTable.userId, userId)));
+    res.send({
+      message: "Post deleted successfully",
+      deletedPost: deletedPost[0],
+    });
   });
 };
+

@@ -1,11 +1,17 @@
 import { Router } from "express";
+import type { Express } from "express";
 import bcrypt from "bcrypt";
 import { db } from "./db/database.ts";
 import { usersTable } from "./db/schema.ts";
 import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
 
+
 const router = Router();
+
+export const initializeAuthAPI = (app: Express) => {
+  app.use("/auth", router);
+}
 
 router.post("/register", async (req, res) => {
     const { username, password } = req.body;

@@ -1,4 +1,14 @@
-node_modules
-.git
+# Ignore node_modules and other unnecessary files from being included in the Docker image
+
+# bugfix: had to add **/ to ignore node_modules and .git folders in all subdirectories and ollama_data, otherwise the image build would fail and take too long.
+
+**/node_modules
+**/.git
+**/.next
+**/.nuxt
+dist
 .env
-drizzle
+docker-data
+postgres_data
+ollama_data
+npm-debug.log

@@ -1,0 +1,80 @@
+<template>
+  <div class="min-h-screen bg-slate-900 text-emerald-400 flex items-center justify-center p-4">
+    <div class="border-4 border-emerald-500 bg-slate-800 p-8 w-full max-w-md">
+      <h2 class="text-2xl font-bold text-center mb-6 text-cyan-400 border-b-2 border-emerald-400 pb-2 font-mono">
+        CREATE ACCOUNT
+      </h2>
+      <form @submit.prevent="handleRegister" class="space-y-4">
+        <div>
+          <label class="block mb-2 text-sm font-bold text-emerald-300 font-mono" for="username">USERNAME</label>
+          <input
+            id="username"
+            v-model="username"
+            type="text"
+            required
+            class="w-full px-3 py-2 border-2 border-emerald-400 bg-slate-700 text-emerald-300 focus:outline-none font-mono"
+          />
+        </div>
+
+        <div>
+          <label class="block mb-2 text-sm font-bold text-emerald-300 font-mono" for="password">PASSWORD</label>
+          <div class="relative">
+            <input
+              :type="showPassword ? 'text' : 'password'"
+              id="password"
+              v-model="password"
+              required
+              class="w-full px-3 py-2 border-2 border-emerald-400 bg-slate-700 text-emerald-300 focus:outline-none font-mono"
+            />
+            <button
+              type="button"
+              @click="showPassword = !showPassword"
+              class="absolute inset-y-0 right-0 pr-3 text-xs text-cyan-300 font-bold font-mono hover:text-cyan-200"
+            >
+              {{ showPassword ? '[HIDE]' : '[SHOW]' }}
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full border-2 border-emerald-400 bg-emerald-900 hover:bg-emerald-800 py-2 font-bold text-emerald-300 mt-4 font-mono"
+        >
+          REGISTER
+        </button>
+      </form>
+      <p class="mt-6 text-center text-xs text-emerald-300 border-t-2 border-emerald-400 pt-4 font-mono">
+        Have an account?
+        <NuxtLink to="/login" class="text-cyan-400 font-bold hover:text-cyan-300">
+          [LOGIN]
+        </NuxtLink>
+      </p>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+
+const username = ref('');
+const password = ref('');
+const showPassword = ref(false);
+const auth = useAuth();
+const router = useRouter();
+
+onMounted(() => {
+  if (auth.isAuthenticated()) {
+    router.push('/feed');
+  }
+});
+
+const handleRegister = async () => {
+  try {
+    await auth.register(username.value, password.value);
+    router.push('/login');
+  } catch (error: any) {
+    alert(error.message || 'Registration failed');
+  }
+};
+</script>
