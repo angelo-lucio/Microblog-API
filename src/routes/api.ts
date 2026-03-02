@@ -4,10 +4,12 @@ import { db } from "../db/database.ts";
 import { and, eq } from "drizzle-orm";
 import { sentimentQueue } from "../message-broker/index.ts";
 import authMiddleware from "../middleware/auth-middleware.ts";
+import { getPosts, invalidatePostsCache } from "../microservices/cache.ts";
 
-export const initializeAPI = (app: Express) => {
+
+export const initializeAPI = (app: Express) => { 
   app.get("/hello-world", (req: Request, res: Response) => {
-    res.send("Hello World!");
+    res.send("Hello World!"); // Test route to check if API is working
   });
 
   // apply auth middleware to all /posts routes
@@ -17,14 +19,15 @@ export const initializeAPI = (app: Express) => {
   app.get("/posts", async (req: Request, res: Response) => {
     const userId = req.user?.id;
     if (!userId) {
-      return res.status(401).send({ error: "Unauthorized" });
+      return res.status(401).send({ error: "Unauthorized" }); // if user is not authenticated, return 401
     }
     // fetch all posts from database
-    const allPosts = await db.select().from(postsTable);
+    const allPosts = await getPosts(userId); // This will try to get posts from cache first, if not found it will fetch from database and cache it
 
     const validPosts = allPosts.filter((post) => {
+      
       // if post is negative or dangerous, only show it to the user who created it
-      if (post.sentiment === "negative" || post.sentiment === "dangerous")
+      if (post.sentiment  === "negative" || post.sentiment === "dangerous")
         return post.userId === userId;
       return true;
     });
@@ -35,30 +38,30 @@ export const initializeAPI = (app: Express) => {
   app.post("/posts", async (req: Request, res: Response) => {
     const userId = req.user?.id;
     if (!userId) {
-      res.status(401).send({ error: "Unauthorized" });
+      res.status(401).send({ error: "Unauthorized" });  // if user is not authenticated, return 401
       return;
     }
     const { content } = req.body;
     if (!content) {
-      res.status(400).send({ error: "Content is required" });
+      res.status(400).send({ error: "Content is required" }); // if content is missing, return 400
       return;
     }
     const [newPost] = await db
       .insert(postsTable)
       .values({ content, userId })
-      .returning();
+      .returning(); // returning the newly created post
 
     if (!newPost) {
-      res.status(500).send({ error: "Failed to create post" });
+      res.status(500).send({ error: "Failed to create post" }); // if post creation failed, return 500
       return;
     }
+    await invalidatePostsCache(); // Invalidate the posts cache after creating a new post to ensure cache consistency
 
     // send post to message broker for sentiment analysis
     await sentimentQueue.add("analyze-sentiment", { postId: newPost.id });
     console.log(
-      `Post ${newPost.id} created and sent to message broker for sentiment analysis`,
+      `Post ${newPost.id} created and sent to message broker for sentiment analysis`, 
     );
-
     res.status(201).send(newPost);
   });
 
@@ -66,26 +69,24 @@ export const initializeAPI = (app: Express) => {
   app.get("/posts/:id", async (req: Request, res: Response) => {
     const userId = req.user?.id;
     if (!userId) {
-      res.status(401).send({ error: "Unauthorized" });
+      res.status(401).send({ error: "Unauthorized" }); // if user is not authenticated, return 401
       return;
     }
     const id = Number(req.params.id);
     if (!id) {
-      res.status(400).send({ error: "Invalid post id" });
+      res.status(400).send({ error: "Invalid post id" }); // if post id is invalid, return 400
       return;
     }
-    const post = await db.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
+    const post = await db
+    .select()
+    .from(postsTable)
+    .where(eq(postsTable.id, id))
+    .limit(1);
     if (!post.length) {
-      res.status(404).send({ error: "Post not found" });
-      return;
-    }
-    const foundPost = post[0];
-    if (!foundPost) {
-      res.status(404).send({ error: "Post not found" });
-      return;
-        }
-    res.send(foundPost);
-  } );
+      res.status(404).send({ error: "Post not found" }); // if post not found in database, return 404
+    };
+    res.send(post[0]);
+  });
 
   // PUT update post
   app.put("/posts/:id", async (req: Request, res: Response) => {
@@ -111,7 +112,6 @@ export const initializeAPI = (app: Express) => {
       .update(postsTable)
       .set({ 
         content: content,
-
         // resetting the sentiment triggering
         sentiment: "pending",
         correction: "",
@@ -123,6 +123,7 @@ export const initializeAPI = (app: Express) => {
       res.status(404).send({ error: "Post not found or unauthorized" });
       return;
     };
+    await invalidatePostsCache(); // Invalidate the posts cache after updating a post to ensure cache consistency
 
     // resending post to message broker for sentiment analysis in case content changed
     await sentimentQueue.add("analyze-sentiment", { content, postId });
@@ -154,21 +155,16 @@ export const initializeAPI = (app: Express) => {
       return;
     }
     const deletedPost = await db
-      .select()
-      .from(postsTable)
+      .delete(postsTable)
       .where(and(eq(postsTable.id, postId), eq(postsTable.userId, userId)))
-      .limit(1);
+      .returning();  
+
     if (!deletedPost.length) {
       res.status(404).send({ error: "Post not found or unauthorized" });
       return;
     }
-    await db
-      .delete(postsTable)
-      .where(and(eq(postsTable.id, postId), eq(postsTable.userId, userId)));
-    res.send({
-      message: "Post deleted successfully",
-      deletedPost: deletedPost[0],
-    });
-  });
-};
+    await invalidatePostsCache(); // Invalidate the posts cache after deleting a post to ensure cache consistency
 
+    res.send({ message: "Post deleted successfully", deletedPost: deletedPost [0] })
+  })
+}
