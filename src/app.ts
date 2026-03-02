@@ -3,7 +3,9 @@ import { initializeAPI } from "./routes/api";
 import { initializeAuthAPI } from "./auth.ts";
 import { initializeMessageBroker } from "./message-broker";
 import cors from "cors"
+import { initializeCache } from "./microservices/cache.ts";
 
+initializeCache();
 
 const SERVER_ROLE = process.env.SERVER_ROLE || "all"
 const allowedServerRoles = ["api", "worker", "all"]
