@@ -15,7 +15,7 @@ services:
       POSTGRES_PASSWORD: supersecret123
       POSTGRES_DB: minitwitter
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - ./docker-data/postgres:/var/lib/postgresql
 
   minitwitter-1:
     build: .      
