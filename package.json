@@ -16,14 +16,18 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@types/express-rate-limit": "^6.0.2",
+    "@types/k6": "^1.6.0",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.70.1",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.1",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
     "ioredis": "^5.10.0",
     "jsonwebtoken": "^9.0.3",
+    "k6": "^0.0.0",
     "ollama": "^0.6.3",
     "pg": "^8.18.0",
     "zod": "^4.3.6",
