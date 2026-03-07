@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { sentimentQueue } from "../message-broker/index.ts";
 import authMiddleware from "../middleware/auth-middleware.ts";
 import { getPosts, invalidatePostsCache } from "../microservices/cache.ts";
+import { logger } from "../microservices/logger.ts";
 
 
 export const initializeAPI = (app: Express) => { 
@@ -14,6 +15,7 @@ export const initializeAPI = (app: Express) => {
 
   // apply auth middleware to all /posts routes
   app.use("/posts", authMiddleware);
+
 
   // GET all posts
   app.get("/posts", async (req: Request, res: Response) => {
@@ -59,7 +61,7 @@ export const initializeAPI = (app: Express) => {
 
     // send post to message broker for sentiment analysis
     await sentimentQueue.add("analyze-sentiment", { postId: newPost.id });
-    console.log(
+    logger.info(
       `Post ${newPost.id} created and sent to message broker for sentiment analysis`, 
     );
     res.status(201).send(newPost);
@@ -127,7 +129,7 @@ export const initializeAPI = (app: Express) => {
 
     // resending post to message broker for sentiment analysis in case content changed
     await sentimentQueue.add("analyze-sentiment", { content, postId });
-    console.log(
+    logger.info(
       `Post ${ content } updated and sent to message broker for sentiment analysis`,
     );
     

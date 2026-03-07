@@ -1,6 +1,6 @@
 import { Ollama } from 'ollama'
 import { z } from 'zod'
-import zodToJsonSchema from 'zod-to-json-schema'
+import { logger } from '../microservices/logger'
 
 // Test other models from ollama
 // ⚠️ Not more than 7 billion parameters ⚠️
@@ -10,7 +10,7 @@ export let ollama: Ollama
 
 export const initializeOllama = async () => {
   if (ollama) return
-  console.log('Initializing Ollama...')
+  logger.info('Initializing Ollama...')
   const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:12434'
   console.log('Initializing Ollama with model:', OLLAMA_MODEL)
   console.log('Using Ollama host:', OLLAMA_HOST)
@@ -19,7 +19,7 @@ export const initializeOllama = async () => {
   })
   // This will pull the model from the server
   // ⚠️ Can take a few minutes ⚠️
-  console.log('Pulling model from server... This can take a few minutes')
+  logger.debug('Pulling model from server... This can take a few minutes')
   await ollama.pull({ model: OLLAMA_MODEL })
 }
 
@@ -32,7 +32,7 @@ export type TextAnalysisResultType = z.infer<typeof TextAnalysisResult>;
 
 export async function textAnalysis(text: string) {
   await initializeOllama()
-  console.log('Analyzing text:', text)
+  logger.info({text: text, module: 'Ollama'}, 'Analising text', text )
   const response = await ollama.chat({
     model: OLLAMA_MODEL,
     messages: [
@@ -67,6 +67,6 @@ export async function textAnalysis(text: string) {
     
     format: 'json',
   })
-console.log('Analysis done:', response.message.content) 
+logger.info({response: response.message.content, module: 'Ollama'}, 'Analysis done:', response.message.content) 
   return JSON.parse(response.message.content) as TextAnalysisResultType;
 }

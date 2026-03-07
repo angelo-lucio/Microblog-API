@@ -38,7 +38,7 @@ const loadPost = async () => {
     const found = await authFetch<any>(`${baseUrl}/posts/${id}`);
     content.value = found.content;
   } catch (e: any) {
-    console.error(e);
+    logger.error(e);
     router.push('/feed');
   }
 };
@@ -51,7 +51,7 @@ const submit = async () => {
     });
     router.push('/feed');
   } catch (e) {
-    console.error(e);
+    logger.error(e);
     alert('Failed to update post');
   }
 };

@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
+import { logger } from '../microservices/logger'
 
 interface UserPayload {
   id: number
@@ -15,14 +16,14 @@ declare global {
 }
 
 const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization
+const authHeader = req.headers.authorization
 
   // logging for debugging
-  console.log('Auth Middleware - Authorization Header:', authHeader)
+ // logger.debug('Auth Middleware - Authorization Header:', authHeader)
 
   if (!authHeader?.startsWith('Bearer ')) // log if header is missing or malformed
   { 
-    console.log(`No valid Authorization header found. Expected format: 'Bearer <token>'. Received: ${authHeader}`)
+    logger.warn(`No valid Authorization header found. Expected format: 'Bearer <token>'. Received: ${authHeader}`)
     return next()
   }
 
@@ -33,10 +34,10 @@ try {
   const payload = jwt.verify(token, secretKey) as unknown as UserPayload
   req.user = payload
   // log the decoded payload for debugging
-  console.log('Auth Middleware - Decoded JWT Payload:', payload.username)
+  //logger.debug('Auth Middleware - Decoded JWT Payload:', payload.username)
 } catch (err) {
   // log the error for debugging
-  console.log('Auth Middleware - JWT verification failed:', err)
+  //logger.debug('Auth Middleware - JWT verification failed:', err)
   req.user = undefined
 }
 
