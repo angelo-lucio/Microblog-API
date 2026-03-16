@@ -60,7 +60,7 @@ const getPostsFromDB = async () => {
     id: postsTable.id,
     content: postsTable.content,
     userId: postsTable.userId,
-    authorName: usersTable.username,
+    username: usersTable.username,
     sentiment: postsTable.sentiment,
     correction: postsTable.correction,
   })

@@ -5,27 +5,27 @@
         <div class="flex items-center space-x-4">
           <h1 class="text-2xl font-bold font-mono text-cyan-400">[MICROBLOG]</h1>
           <span
-            v-if="auth.isAuthenticated() && user"
+            v-if="loggedIn && user"
             class="text-sm font-mono text-emerald-300 border border-emerald-400 px-2 py-1"
           >
             USER: {{ user.username }}
           </span>
         </div>
         <nav class="space-x-2 font-mono">
-          <NuxtLink v-if="!auth.isAuthenticated()" to="/login" class="border-2 border-emerald-400 px-3 py-1 hover:bg-emerald-900">
+          <NuxtLink v-if="!loggedIn" to="/login" class="border-2 border-emerald-400 px-3 py-1 hover:bg-emerald-900">
             [LOGIN]
           </NuxtLink>
-          <NuxtLink v-if="!auth.isAuthenticated()" to="/register" class="border-2 border-cyan-400 px-3 py-1 hover:bg-cyan-900">
+          <NuxtLink v-if="!loggedIn" to="/register" class="border-2 border-cyan-400 px-3 py-1 hover:bg-cyan-900">
             [REGISTER]
           </NuxtLink>
-          <NuxtLink v-if="auth.isAuthenticated()" to="/feed" class="border-2 border-emerald-400 px-3 py-1 hover:bg-emerald-900">
+          <NuxtLink v-if="loggedIn" to="/feed" class="border-2 border-emerald-400 px-3 py-1 hover:bg-emerald-900">
             [FEED]
           </NuxtLink>
-          <NuxtLink v-if="auth.isAuthenticated()" to="/posts/create" class="border-2 border-cyan-400 px-3 py-1 hover:bg-cyan-900">
+          <NuxtLink v-if="loggedIn" to="/posts/create" class="border-2 border-cyan-400 px-3 py-1 hover:bg-cyan-900">
             [POST]
           </NuxtLink>
           <button
-            v-if="auth.isAuthenticated()"
+            v-if="loggedIn"
             @click="handleLogout"
             class="border-2 border-red-400 px-3 py-1 hover:bg-red-900 text-red-300"
           >
@@ -44,7 +44,10 @@ import { computed } from "vue";
 
 const auth = useAuth();
 const router = useRouter();
+
+// Reactive: reads from the module-level singleton ref in useAuth
 const user = computed(() => auth.getUser());
+const loggedIn = computed(() => !!user.value);
 
 const handleLogout = () => {
   auth.logout();

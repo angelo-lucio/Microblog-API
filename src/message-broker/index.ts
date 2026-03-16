@@ -4,6 +4,7 @@ import { textAnalysis } from "../microservices/ai"
 import { postsTable } from "../db/schema"
 import { db } from "../db/database.ts"
 import { logger } from "../microservices/logger.ts" 
+import { invalidatePostsCache } from "../microservices/cache.ts"
 
 export let sentimentQueue: Queue
 let sentimentWorker: Worker
@@ -50,6 +51,7 @@ const analyzeSentiment = async (job: Job) => {
 
     // update post with sentiment analysis result
     await db.update(postsTable).set({ sentiment: safeSentiment, correction: safeCorrection }).where(eq(postsTable.id, postId))
+    await invalidatePostsCache()
     logger.info(`Sentiment analysis for post ${postId} completed`)
 
     } catch (error) {

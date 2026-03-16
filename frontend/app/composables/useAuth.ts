@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useApi } from "./useApi";
 
 type TokenPayload = {
@@ -10,8 +10,10 @@ type TokenPayload = {
 
 const TOKEN_KEY = "microblog_token";
 
+// Module-level singleton – shared across ALL calls to useAuth()
+const user = ref<TokenPayload | null>(null);
+
 export const useAuth = () => {
-  const user = ref<TokenPayload | null>(null);
 
   const getToken = () => {
     return (process.client && localStorage.getItem(TOKEN_KEY)) || null;

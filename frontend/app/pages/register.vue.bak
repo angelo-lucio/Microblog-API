@@ -36,27 +36,9 @@
           </div>
         </div>
 
-        <div>
-          <label class="block mb-2 text-sm font-bold text-emerald-300 font-mono" for="confirmPassword">CONFIRM PASSWORD</label>
-          <div class="relative">
-            <input
-              :type="showPassword ? 'text' : 'password'"
-              id="confirmPassword"
-              v-model="confirmPassword"
-              required
-              class="w-full px-3 py-2 border-2 font-mono focus:outline-none"
-              :class="confirmMismatch ? 'border-red-400 bg-red-950 text-red-300' : 'border-emerald-400 bg-slate-700 text-emerald-300'"
-            />
-          </div>
-          <p v-if="confirmMismatch" class="mt-1 text-xs text-red-400 font-mono">
-            [ERROR: PASSWORDS DO NOT MATCH]
-          </p>
-        </div>
-
         <button
           type="submit"
-          :disabled="confirmMismatch"
-          class="w-full border-2 border-emerald-400 bg-emerald-900 hover:bg-emerald-800 py-2 font-bold text-emerald-300 mt-4 font-mono disabled:opacity-40 disabled:cursor-not-allowed"
+          class="w-full border-2 border-emerald-400 bg-emerald-900 hover:bg-emerald-800 py-2 font-bold text-emerald-300 mt-4 font-mono"
         >
           REGISTER
         </button>
@@ -72,35 +54,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-
 
 const username = ref('');
 const password = ref('');
-const confirmPassword = ref('');
 const showPassword = ref(false);
 const auth = useAuth();
 const router = useRouter();
 
-const confirmMismatch = computed(
-  () => confirmPassword.value.length > 0 && password.value !== confirmPassword.value
-);
-
 onMounted(() => {
-  if (auth.isAuthenticated()) router.push('/feed');
+  if (auth.isAuthenticated()) {
+    router.push('/feed');
+  }
 });
 
 const handleRegister = async () => {
-  if (password.value !== confirmPassword.value) {
-    alert('[ERROR] Passwords do not match!');
-    return;
-  }
   try {
     await auth.register(username.value, password.value);
-    router.push('/feed');
+    router.push('/login');
   } catch (error: any) {
-    alert((error as any)?.data?.error || (error as any).message || 'Registration failed');
+    alert(error.message || 'Registration failed');
   }
 };
 </script>
+
