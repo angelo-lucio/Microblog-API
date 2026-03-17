@@ -1,104 +1,175 @@
-# Small Talk
+# Microblog-API
 
-<p align="center">
-  <img src="./frontend/assets/smalltalklogo.png" width="180" alt="Small Talk Logo" />
-</p>
+Microblog-API ist ein Fullstack-Microblog-Projekt mit Nuxt-Frontend, Express-API, PostgreSQL, Redis/BullMQ und Ollama-basierter AI-Moderation.
 
-<p align="center">
-  <strong>A Minimal Twitter-like Social Media Application</strong>
-</p>
+## Projekt-Highlights
 
----
+- Login/Register mit JWT-Authentifizierung
+- Feed mit Create/Edit/Delete
+- AI-Moderation pro Post (ok, negative, dangerous)
+- KI-Korrekturtext im Frontend sichtbar
+- Queue-basierte Analyse mit Retry/Fallback
+- Light-Mode-Toggle im Frontend
+- Docker-Setup mit Nginx Load Balancer und API-Replikaten
 
-# 1. What is Small Talk?
+## Bilder
 
-Small Talk is a mini Twitter-like web application.
+![Architektur](docs/images/architecture-overview.svg)
 
-Users can:
-- Register an account
-- Login
-- Create posts
-- Edit posts
-- Delete posts
-- View all posts
+![API-Flow](docs/images/api-flow.svg)
 
-This project was created as a school assignment to demonstrate:
-- Backend development
-- JWT authentication
-- REST API design
-- PostgreSQL database usage
-- Drizzle ORM
-- Docker containerization
+![Theme Toggle](docs/images/theme-toggle-preview.svg)
 
----
+## Architektur
 
-# 2. Technologies Used
+- Frontend: Nuxt 3 + Vue 3 + TailwindCSS
+- Backend: Express (TypeScript)
+- ORM/DB: Drizzle + PostgreSQL
+- Queue/Cache: BullMQ + Redis
+- AI: Ollama (Sentiment + Korrektur)
+- Infra: Docker Compose + Nginx + Prometheus + Grafana
 
-- Bun (JavaScript runtime)
-- Express (Backend framework)
-- PostgreSQL (Database)
-- Drizzle ORM (Database schema & query tool)
-- JWT (Authentication system)
-- Docker & Docker Compose (Container system)
+## Verwendete Tools und warum
 
----
+- Bun: Runtime + Package Management fuer schnellen TypeScript/JS-Workflow
+- Nuxt: Meta-Framework fuer Vue mit Routing und modernem DX
+- TailwindCSS: Utility-first Styling fuer schnelles UI-Iterieren
+- Express: leichtgewichtiges API-Framework
+- Drizzle ORM: typsichere DB-Queries und Schema-Management
+- PostgreSQL: relationale Kern-Datenbank
+- Redis: Caching und Queue-Backend
+- BullMQ: asynchrone Job-Verarbeitung (AI-Moderation)
+- Ollama: lokale/Container-basierte LLM-Ausfuehrung
+- Nginx: Reverse Proxy + Load Balancer
+- Prometheus/Grafana: Basis-Monitoring
 
-# 3. Complete Installation Guide (Beginner Friendly)
+## Installation (Docker, empfohlen)
 
-Follow these steps exactly in order.
+Voraussetzungen:
 
----
+- Docker Desktop
+- Git
 
-## STEP 1 – Install Git
+Schritte:
 
-Git is required to download the project.
+1. Repository klonen.
+2. Im Projektordner starten:
 
-1. Go to:  
-  have to fill
-
-2. Download Git for Windows
-
-3. Install with default settings
-
-4. Restart your computer
-
-## Step 2 - Install Bun:
-
-Open PowerShell and run:
-powershell -c "irm bun.sh/install.ps1 | iex"
-
-After installation verify: 
-bun --version
-
-## Step 3 - Start Docker:
-
-Inside the project folder, run:
+```bash
 docker compose down
 docker compose up -d --build
+```
 
----
+3. Datenbankschema anwenden:
 
-# 4. Start the Application
+```bash
+bunx drizzle-kit push
+```
 
-After the containers start successfully, open your browser:
-http://localhost
+4. Anwendung oeffnen:
 
----
+- Frontend: http://localhost:4000
+- API via Nginx: http://localhost
+- Redis UI: http://localhost:8001
+- Grafana: http://localhost:3100
 
-# 5. Database Management (Drizzle)
+Optionales AI-Modell laden:
 
-Push schema:
+```bash
+docker exec -it ollamaforminitwitter ollama pull tinyllama
+```
+
+## Installation (lokale Entwicklung ohne Full Docker)
+
+Voraussetzungen:
+
+- Bun
+- Node-kompatible Umgebung
+- laufende PostgreSQL/Redis/Ollama-Instanzen
+
+Backend:
+
+```bash
+bun install
+bunx drizzle-kit push
+bun run src/app.ts
+```
+
+Frontend:
+
+```bash
+cd frontend
+bun install
+bun run dev
+```
+
+## Wichtige Compose-Services
+
+- db: PostgreSQL
+- redis: Cache + Queue Backend
+- minitwitter-1 / minitwitter-2
+- sentiment-worker: BullMQ Worker fuer AI-Moderation
+- ollama: LLM-Service
+- load-balancer: Nginx fuer API-Zugriff
+- frontend: Nuxt-App
+- prometheus / grafana: Monitoring
+
+## AI-Moderation Verhalten
+
+Beim Erstellen oder Bearbeiten eines Posts:
+
+1. Post wird mit sentiment = pending gespeichert.
+2. Queue-Job wird erzeugt.
+3. Worker analysiert Text ueber Ollama.
+4. Ergebnis wird als sentiment + correction gespeichert.
+5. Bei mehreren Fehlschlaegen wird sentiment = error gesetzt.
+
+Damit bleiben Flags nicht dauerhaft auf pending stehen.
+
+## Frontend Theme Toggle
+
+- Im Header gibt es einen Button fuer Light/Dark-Umschaltung.
+- Theme wird in localStorage unter microblog_theme_mode gespeichert.
+- Die Umschaltung wirkt global auf das Arena-Layout.
+
+## Nuetzliche Befehle
+
+```bash
+# Container neu bauen/starten
+docker compose up -d --build
+
+# Logs ansehen
+docker compose logs -f
+
+# Drizzle Schema pushen
 bunx drizzle-kit push
 
-Or inside Docker:
-docker compose exec minitwitter bunx drizzle-kit push
+# Frontend lokal starten
+cd frontend && bun run dev
+```
 
-Set environment variable (PowerShell):
-$env:DATABASE_URL="postgresql://postgres:supersecret123@localhost:5432/minitwitter"
+## Projektstruktur (vereinfacht)
 
-Open Drizzle Studio:
-bunx drizzle-kit studio
+```text
+src/
+  app.ts
+  routes/
+  message-broker/
+  microservices/
+  db/
 
+frontend/
+  app/
+    pages/
+    components/
+    composables/
 
+docs/images/
+  architecture-overview.svg
+  api-flow.svg
+  theme-toggle-preview.svg
+```
 
-docker exec -it ollama ollama pull tinyllama
+## Hinweis
+
+Die Dokumentation ist auf den aktuellen Stand der Codebasis angepasst (inkl. Feed-Redesign, AI-Korrekturanzeige und Theme-Toggle).

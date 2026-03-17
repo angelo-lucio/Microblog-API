@@ -1,13 +1,17 @@
 <template>
   <div class="flex min-h-full w-full flex-col">
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3 border border-cyan-500/70 bg-slate-900/70 p-4 md:mb-6 md:p-5">
+    <div
+      class="mb-4 flex flex-wrap items-center justify-between gap-3 border p-4 md:mb-6 md:p-5"
+      :class="isLight ? 'border-sky-400/80 bg-white/80' : 'border-cyan-500/70 bg-slate-900/70'"
+    >
       <div>
-        <h1 class="text-2xl font-black uppercase tracking-wider text-cyan-300 md:text-3xl">Live Feed</h1>
-        <p class="text-xs uppercase tracking-wide text-emerald-300 md:text-sm">Arena stream with AI moderation</p>
+        <h1 class="text-2xl font-black uppercase tracking-wider md:text-3xl" :class="isLight ? 'text-sky-700' : 'text-cyan-300'">Live Feed</h1>
+        <p class="text-xs uppercase tracking-wide md:text-sm" :class="isLight ? 'text-blue-700' : 'text-emerald-300'">Arena stream with AI moderation</p>
       </div>
       <NuxtLink
         to="/posts/create"
-        class="border border-emerald-400 bg-emerald-900/40 px-4 py-2 text-xs font-bold uppercase tracking-wider text-emerald-300 hover:bg-emerald-800/60 md:text-sm"
+        class="border px-4 py-2 text-xs font-bold uppercase tracking-wider md:text-sm"
+        :class="isLight ? 'border-indigo-400 bg-indigo-100 text-indigo-900 hover:bg-indigo-200' : 'border-emerald-400 bg-emerald-900/40 text-emerald-300 hover:bg-emerald-800/60'"
       >
         Create Post
       </NuxtLink>
@@ -17,18 +21,20 @@
       <article
         v-for="p in posts"
         :key="p.id"
-        class="flex min-h-[260px] flex-col border border-cyan-500/70 bg-slate-900/80 p-4"
+        class="flex min-h-[260px] flex-col border p-4"
+        :class="isLight ? 'border-sky-300 bg-sky-50/80' : 'border-cyan-500/70 bg-slate-900/80'"
       >
-        <div class="mb-3 flex items-start justify-between gap-3 border-b border-slate-700 pb-3">
+        <div class="mb-3 flex items-start justify-between gap-3 border-b pb-3" :class="isLight ? 'border-blue-200' : 'border-slate-700'">
           <div class="flex items-center gap-3">
             <img
               :src="avatarUrl(ownerName(p))"
               :alt="`Avatar ${ownerName(p)}`"
-              class="h-10 w-10 border border-cyan-400 object-cover"
+              class="h-10 w-10 border object-cover"
+              :class="isLight ? 'border-blue-400' : 'border-cyan-400'"
             />
             <div>
-              <p class="text-sm font-semibold uppercase tracking-wide text-cyan-200">{{ ownerName(p) }}</p>
-              <p class="text-xs uppercase tracking-wide text-slate-400">Post #{{ p.id }} | UID {{ p.userId }}</p>
+              <p class="text-sm font-semibold uppercase tracking-wide" :class="isLight ? 'text-blue-800' : 'text-cyan-200'">{{ ownerName(p) }}</p>
+              <p class="text-xs uppercase tracking-wide" :class="isLight ? 'text-slate-600' : 'text-slate-400'">Post #{{ p.id }} | UID {{ p.userId }}</p>
             </div>
           </div>
           <span :class="statusClass(p.sentiment)" class="border px-2 py-1 text-[11px] font-bold uppercase tracking-wide">
@@ -36,23 +42,29 @@
           </span>
         </div>
 
-        <p class="mb-4 flex-1 whitespace-pre-wrap text-sm leading-relaxed text-emerald-100">{{ p.content }}</p>
+        <p class="mb-4 flex-1 whitespace-pre-wrap text-sm leading-relaxed" :class="isLight ? 'text-slate-800' : 'text-emerald-100'">{{ p.content }}</p>
 
-        <div v-if="hasCorrection(p)" class="mb-3 border border-amber-400/70 bg-amber-950/30 p-2">
-          <p class="text-[11px] font-bold uppercase tracking-wide text-amber-300">AI correction</p>
-          <p class="mt-1 text-xs text-amber-100">{{ p.correction }}</p>
+        <div
+          v-if="hasCorrection(p)"
+          class="mb-3 border p-2"
+          :class="isLight ? 'border-amber-300 bg-amber-100/80' : 'border-amber-400/70 bg-amber-950/30'"
+        >
+          <p class="text-[11px] font-bold uppercase tracking-wide" :class="isLight ? 'text-amber-900' : 'text-amber-300'">AI correction</p>
+          <p class="mt-1 text-xs" :class="isLight ? 'text-amber-800' : 'text-amber-100'">{{ p.correction }}</p>
         </div>
 
         <div v-if="currentUser && currentUser.id === p.userId" class="mt-auto flex gap-2 pt-2">
           <NuxtLink
             :to="`/posts/${p.id}/edit`"
-            class="flex-1 border border-cyan-400 bg-cyan-900/40 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-cyan-200 hover:bg-cyan-800/60"
+            class="flex-1 border px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide"
+            :class="isLight ? 'border-sky-400 bg-sky-100 text-sky-900 hover:bg-sky-200' : 'border-cyan-400 bg-cyan-900/40 text-cyan-200 hover:bg-cyan-800/60'"
           >
             Edit
           </NuxtLink>
           <button
             @click="deletePost(p.id)"
-            class="flex-1 border border-red-400 bg-red-900/30 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-red-200 hover:bg-red-800/50"
+            class="flex-1 border px-3 py-2 text-xs font-semibold uppercase tracking-wide"
+            :class="isLight ? 'border-rose-300 bg-rose-100 text-rose-800 hover:bg-rose-200' : 'border-red-400 bg-red-900/30 text-red-200 hover:bg-red-800/50'"
           >
             Delete
           </button>
@@ -60,7 +72,11 @@
       </article>
     </div>
 
-    <p v-if="posts.length === 0" class="border border-emerald-500 bg-slate-900/80 p-8 text-center text-sm font-semibold uppercase tracking-wide text-emerald-300">
+    <p
+      v-if="posts.length === 0"
+      class="border p-8 text-center text-sm font-semibold uppercase tracking-wide"
+      :class="isLight ? 'border-sky-300 bg-white/80 text-sky-800' : 'border-emerald-500 bg-slate-900/80 text-emerald-300'"
+    >
       No posts available
     </p>
   </div>
@@ -84,6 +100,7 @@ type FeedPost = {
 
 const router = useRouter();
 const auth = useAuth();
+const { isLight } = useTheme();
 const { baseUrl, authFetch } = useApi();
 const posts = ref<FeedPost[]>([]);
 const currentUser = computed(() => auth.getUser());
@@ -143,6 +160,13 @@ const statusLabel = (sentiment: Sentiment) => {
 
 const statusClass = (sentiment: Sentiment) => {
   const normalized = String(sentiment || "pending").toLowerCase();
+  if (isLight.value) {
+    if (normalized === "ok") return "border-green-400 text-green-900 bg-green-100";
+    if (normalized === "negative") return "border-amber-400 text-amber-900 bg-amber-100";
+    if (normalized === "dangerous") return "border-rose-400 text-rose-900 bg-rose-100";
+    if (normalized === "error") return "border-orange-400 text-orange-900 bg-orange-100";
+    return "border-sky-400 text-sky-900 bg-sky-100";
+  }
   if (normalized === "ok") return "border-emerald-400 text-emerald-300 bg-emerald-900/30";
   if (normalized === "negative") return "border-yellow-400 text-yellow-300 bg-yellow-950/40";
   if (normalized === "dangerous") return "border-red-400 text-red-300 bg-red-950/40";

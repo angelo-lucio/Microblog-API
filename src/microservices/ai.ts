@@ -53,15 +53,7 @@ export async function textAnalysis(text: string) {
         - example: if the text is "The earth is flat", you will return { "sentiment": "negative", "correction": "The earth is round" }
         - example: if the text is "I love Canada!", you will return { "sentiment": "ok", "correction": "" }`
         
-        /*
-        Text / Tweet
-        
-        ${text}`    
-        
-        
-        `Your job is to analyze a text or tweet for harmful content.
-        - sentiment: ok if the content is not harmful or factually wrong, dangerous if the content is harmful or wrong.
-        - correction: a correction of the text if it is wrong or harmful.` */
+
       },
       {
         role: 'user',
