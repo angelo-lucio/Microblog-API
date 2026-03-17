@@ -14,11 +14,19 @@ Microblog-API ist ein Fullstack-Microblog-Projekt mit Nuxt-Frontend, Express-API
 
 ## Bilder
 
-![Architektur](docs/images/architecture-overview.svg)
+![Architektur and Flow](docs/images/Gemini_Generated_Image_o995rbo995rbo995.png)
 
-![API-Flow](docs/images/api-flow.svg)
+![](docs/images/API-Flow.png)
 
-![Theme Toggle](docs/images/theme-toggle-preview.svg)
+![Screenshots](docs/images/Microblog-Arena.png)
+
+![](docs/images/Microblog-Arena_hell.png)
+
+![](docs/images/Microblog-Arena_buttons.png)
+
+![](docs/images/Microblog-Arena-post.png)
+
+![](<docs/images/Microblog-Arena posts.png>)
 
 ## Architektur
 
@@ -65,6 +73,7 @@ docker compose up -d --build
 ```bash
 bunx drizzle-kit push
 ```
+(mit "docker compose up -d --build" ist es automatisiert)
 
 4. Anwendung oeffnen:
 
@@ -76,7 +85,7 @@ bunx drizzle-kit push
 Optionales AI-Modell laden:
 
 ```bash
-docker exec -it ollamaforminitwitter ollama pull tinyllama
+docker exec -it ollamaforminitwitter ollama pull llama3.2:1b // oder anderes beliebiges Modell
 ```
 
 ## Installation (lokale Entwicklung ohne Full Docker)
@@ -164,12 +173,9 @@ frontend/
     components/
     composables/
 
-docs/images/
-  architecture-overview.svg
-  api-flow.svg
-  theme-toggle-preview.svg
 ```
 
 ## Hinweis
 
 Die Dokumentation ist auf den aktuellen Stand der Codebasis angepasst (inkl. Feed-Redesign, AI-Korrekturanzeige und Theme-Toggle).
+.env File ist hier um das Demozweck zu beschleunigen / vereinfachen
